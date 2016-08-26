@@ -9,6 +9,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.text.TextUtils;
 
+import com.mparticle.kits.KitUtils;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -196,7 +198,7 @@ public class ButtonUtil {
     public static String formatCurrency(final String currencyCode, final int valuePennies) {
         final float currencyAmount = valuePennies / 100f;
         NumberFormat amountFormat = NumberFormat.getNumberInstance();
-        if (TextUtils.isEmpty(currencyCode)) {
+        if (KitUtils.isEmpty(currencyCode)) {
             // No currency code
         }
         else {
@@ -231,7 +233,7 @@ public class ButtonUtil {
      * @return interpreted color represented as an ARGB integer as Android expects or WHITE if failed.
      */
     public static int safeColorValue(final String colorString) {
-        if (TextUtils.isEmpty(colorString)) return Color.WHITE;
+        if (KitUtils.isEmpty(colorString)) return Color.WHITE;
         String color = colorString;
         // Normalize to not have # prefix
         if (color.charAt(0) == '#') {
@@ -258,6 +260,6 @@ public class ButtonUtil {
     public static boolean isInstalledFromStore(final Context context) {
         final String installerPackageName = context.getPackageManager().getInstallerPackageName(context.getPackageName());
         ButtonLog.visibleFormat("Found installer application to be: %s", installerPackageName);
-        return !TextUtils.isEmpty(installerPackageName);
+        return !KitUtils.isEmpty(installerPackageName);
     }
 }

@@ -51,7 +51,7 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
     @Override
     protected List<ReportingMessage> onKitCreate(Map<String, String> settings, Context context) {
         final String applicationId = settings.get("application_id");
-        if (TextUtils.isEmpty(applicationId)) {
+        if (KitUtils.isEmpty(applicationId)) {
 
             throw new IllegalArgumentException("No Button application ID provided, can't initialize kit.");
         }
@@ -103,12 +103,12 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
             }
             final String referrerRaw = intent.getStringExtra("referrer");
             Log.d(TAG, "Received install referrer: " + referrerRaw);
-            if (TextUtils.isEmpty(referrerRaw)) {
+            if (KitUtils.isEmpty(referrerRaw)) {
                 ButtonLog.visible("Recorded installation without referrer, ignore.");
                 return;
             }
             final String existingReferrer = mStorage.getInstallReferrer();
-            if (!TextUtils.isEmpty(existingReferrer)) {
+            if (!KitUtils.isEmpty(existingReferrer)) {
                 ButtonLog.visibleFormat("Installation already attributed, ignoring new value. (Existing: %s, Ignored: %s)", existingReferrer, referrerRaw);
                 return;
             }

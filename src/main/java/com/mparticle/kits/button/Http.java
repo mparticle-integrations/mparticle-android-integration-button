@@ -2,6 +2,8 @@ package com.mparticle.kits.button;
 
 import android.text.TextUtils;
 
+import com.mparticle.kits.KitUtils;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -96,7 +98,7 @@ public class Http {
         urlConnection.setRequestMethod(request.method());
 
         final String body = request.body();
-        if (!TextUtils.isEmpty(body)) {
+        if (!KitUtils.isEmpty(body)) {
             final OutputStream os = urlConnection.getOutputStream();
             ButtonUtil.writeStringToStream(os, body);
             ButtonLog.infoFormat(TAG, "POST'ed: %s", body);
