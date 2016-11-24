@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.mparticle.DeepLinkError;
 import com.mparticle.DeepLinkResult;
+import com.mparticle.MParticle;
 import com.mparticle.kits.button.ButtonApi;
 import com.mparticle.kits.button.ButtonLog;
 import com.mparticle.kits.button.DeepLinkListener;
@@ -60,6 +61,9 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
         final IdentifierForAdvertiserProvider ifaProvider = new IdentifierForAdvertiserProvider(context);
         mApi = new ButtonApi(hostInformation, ifaProvider);
         mStorage = new Storage(context, applicationId);
+        Uri data = MParticle.getInstance().getAppStateManager().getLaunchUri();
+        String action = MParticle.getInstance().getAppStateManager().getLaunchAction();
+        handleIntent(data, action);
         return null;
     }
 
@@ -147,12 +151,12 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
         return mStorage.getReferrer();
     }
 
-    private List<ReportingMessage> handleIntent(final Intent intent) {
-        if (intent == null || intent.getData() == null || !Intent.ACTION_VIEW.equals(intent.getAction())) {
+    private List<ReportingMessage> handleIntent(final Uri data, final String action) {
+        if (data == null || !Intent.ACTION_VIEW.equals(action)) {
             return null;
         }
 
-        handleIntentData(intent.getData());
+        handleIntentData(data);
         return null;
     }
 
@@ -189,7 +193,11 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
 
     @Override
     public List<ReportingMessage> onActivityCreated(final Activity activity, final Bundle savedInstanceState) {
-        return handleIntent(activity.getIntent());
+        Intent intent = activity.getIntent();
+        if (intent == null) {
+            return null;
+        }
+        return handleIntent(intent.getData(), intent.getAction());
     }
 
     @Override
