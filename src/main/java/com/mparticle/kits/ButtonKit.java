@@ -193,6 +193,7 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
         mStorage.setReferrer(referrer);
         final Map<String, String> attributes = getIntegrationAttributes();
         attributes.put(ATTRIBUTE_REFERRER, referrer);
+        ButtonLog.verboseFormat(TAG, "Updated integration attributes to: %s", attributes);
         setIntegrationAttributes(attributes);
     }
 
