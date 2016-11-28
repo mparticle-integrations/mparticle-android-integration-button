@@ -21,6 +21,7 @@ import com.mparticle.kits.button.Storage;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +36,7 @@ import static com.mparticle.kits.button.Constants.DeepLink;
 public class ButtonKit extends KitIntegration implements KitIntegration.ActivityListener {
 
     private static final String TAG = "ButtonKit";
+    private static final String ATTRIBUTE_REFERRER = "com.usebutton.source_token";
     private ButtonApi mApi;
     private Storage mStorage;
     private static final String ACTION_REFERRER = "com.android.vending.INSTALL_REFERRER";
@@ -189,6 +191,9 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
         }
         if (referrer.equals(mStorage.getReferrer())) return;
         mStorage.setReferrer(referrer);
+        final Map<String, String> attributes = getIntegrationAttributes();
+        attributes.put(ATTRIBUTE_REFERRER, referrer);
+        setIntegrationAttributes(attributes);
     }
 
     @Override
