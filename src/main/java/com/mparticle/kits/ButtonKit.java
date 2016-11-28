@@ -193,15 +193,17 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
 
     @Override
     public List<ReportingMessage> onActivityCreated(final Activity activity, final Bundle savedInstanceState) {
+        return null;
+    }
+
+    @Override
+    public List<ReportingMessage> onActivityStarted(final Activity activity) {
         Intent intent = activity.getIntent();
         if (intent == null) {
             return null;
         }
         return handleIntent(intent.getData(), intent.getAction());
     }
-
-    @Override
-    public List<ReportingMessage> onActivityStarted(final Activity activity) { return null; }
 
     @Override
     public List<ReportingMessage> onActivityResumed(final Activity activity) { return null; }
