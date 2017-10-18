@@ -11,13 +11,13 @@ import org.json.JSONObject;
 import java.util.Calendar;
 import java.util.Locale;
 
-public class CheckPendingLinkCommand extends Command<DeferredDeepLinkDTO> {
+public class CheckPendingLinkCommand extends Command<DeferredAttributionDTO> {
     private static final String TAG = "CheckPendingLink";
     private final Storage mStorage;
     private final ButtonApi mApi;
     private final Display mDisplay;
 
-    public CheckPendingLinkCommand(final FailableReceiver<DeferredDeepLinkDTO> onDeepLink, final Storage storage,
+    public CheckPendingLinkCommand(final FailableReceiver<DeferredAttributionDTO> onDeepLink, final Storage storage,
                                    final ButtonApi buttonApi, final WindowManager windowManager) {
         super(onDeepLink);
         mStorage = storage;
@@ -26,7 +26,7 @@ public class CheckPendingLinkCommand extends Command<DeferredDeepLinkDTO> {
     }
 
     @Override
-    public DeferredDeepLinkDTO execute() throws Exception {
+    public DeferredAttributionDTO execute() throws Exception {
         return mApi.getPendingLink(collectSignals());
     }
 

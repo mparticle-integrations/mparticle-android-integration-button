@@ -11,20 +11,20 @@ import android.view.WindowManager;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-public class DeferredDeepLinkHandler implements FailableReceiver<DeferredDeepLinkDTO> {
+public class DeferredAttributionHandler implements FailableReceiver<DeferredAttributionDTO> {
     private static final String TAG = "DeferredHandler";
     private final PackageManager mPackageManager;
-    private final DeepLinkListener mCallback;
+    private final AttributionListener mCallback;
     private final String mOwnPackage;
     private final Storage mStorage;
     private final ButtonApi mApi;
     private final WindowManager mWindowManager;
     private final IdentifierForAdvertiserProvider mIfaProvider;
 
-    public DeferredDeepLinkHandler(final Context context,
-                                   final Storage storage,
-                                   final ButtonApi api,
-                                   final DeepLinkListener callback) {
+    public DeferredAttributionHandler(final Context context,
+                                      final Storage storage,
+                                      final ButtonApi api,
+                                      final AttributionListener callback) {
         mPackageManager = context.getPackageManager();
         mOwnPackage = context.getPackageName();
         mStorage = storage;
@@ -35,7 +35,7 @@ public class DeferredDeepLinkHandler implements FailableReceiver<DeferredDeepLin
     }
 
     @Override
-    public void onResult(final DeferredDeepLinkDTO result) {
+    public void onResult(final DeferredAttributionDTO result) {
         handleAttribution(result);
         if (isValidDeepLink(result)) {
             trackDeepLink(result);
@@ -43,26 +43,26 @@ public class DeferredDeepLinkHandler implements FailableReceiver<DeferredDeepLin
             if (mPackageManager.queryIntentActivities(deepLinkIntent, 0).isEmpty()) {
                 // This should not happen, but means that our app can't open this URI
                 ButtonLog.warn(TAG, "Couldn't find any activities to open " + deepLinkIntent);
-                mCallback.onNoDeepLink();
+                mCallback.onNoAttribution();
             }
             else {
-                mCallback.onDeepLink(deepLinkIntent);
+                mCallback.onAttribution(deepLinkIntent);
             }
         }
         else {
             ButtonLog.visible("No deferred deep link found.");
-            mCallback.onNoDeepLink();
+            mCallback.onNoAttribution();
         }
     }
 
-    private void handleAttribution(final DeferredDeepLinkDTO result) {
+    private void handleAttribution(final DeferredAttributionDTO result) {
         if (result == null || result.attribution == null) {
             return;
         }
         mStorage.setReferrer(result.attribution.btnRef);
     }
 
-    private void trackDeepLink(final DeferredDeepLinkDTO result) {
+    private void trackDeepLink(final DeferredAttributionDTO result) {
         String btnRef = null;
         String utmSource = null;
         if (result.attribution != null) {
@@ -73,14 +73,14 @@ public class DeferredDeepLinkHandler implements FailableReceiver<DeferredDeepLin
                 result.action, btnRef, utmSource, result.id);
     }
 
-    private boolean isValidDeepLink(final DeferredDeepLinkDTO result) {
+    private boolean isValidDeepLink(final DeferredAttributionDTO result) {
         return result != null && result.match && result.action != null;
     }
 
     @Override
     public void onError() {
         ButtonLog.visible("No deferred deep link found.");
-        mCallback.onNoDeepLink();
+        mCallback.onNoAttribution();
     }
 
     public Intent intentForUri(final Uri uri) {
@@ -92,27 +92,27 @@ public class DeferredDeepLinkHandler implements FailableReceiver<DeferredDeepLin
 
     public void check() {
         if (mStorage.didCheckForDeferredDeepLink()) {
-            mCallback.onNoDeepLink();
+            mCallback.onNoAttribution();
             return;
         }
         mStorage.markCheckedDeferredDeepLink();
         if (isOldInstallation()) {
-            mCallback.onNoDeepLink();
+            mCallback.onNoAttribution();
             return;
         }
 
-        new AsyncTask<Void, Void, DeferredDeepLinkDTO>(){
+        new AsyncTask<Void, Void, DeferredAttributionDTO>(){
             @Override
-            protected DeferredDeepLinkDTO doInBackground(final Void... params) {
+            protected DeferredAttributionDTO doInBackground(final Void... params) {
                 try {
-                    return new CheckPendingLinkCommand(DeferredDeepLinkHandler.this, mStorage, mApi, mWindowManager).execute();
+                    return new CheckPendingLinkCommand(DeferredAttributionHandler.this, mStorage, mApi, mWindowManager).execute();
                 } catch (Exception e) {
                     return null;
                 }
             }
 
             @Override
-            protected void onPostExecute(final DeferredDeepLinkDTO deferredDeepLinkDTO) {
+            protected void onPostExecute(final DeferredAttributionDTO deferredDeepLinkDTO) {
                 super.onPostExecute(deferredDeepLinkDTO);
                 if (deferredDeepLinkDTO == null) {
                     onError();

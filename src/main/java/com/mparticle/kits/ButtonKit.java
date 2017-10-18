@@ -5,35 +5,33 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 
-import com.mparticle.DeepLinkError;
-import com.mparticle.DeepLinkResult;
+import com.mparticle.AttributionError;
+import com.mparticle.AttributionResult;
 import com.mparticle.MParticle;
+import com.mparticle.kits.button.AttributionListener;
 import com.mparticle.kits.button.ButtonApi;
 import com.mparticle.kits.button.ButtonLog;
-import com.mparticle.kits.button.DeepLinkListener;
-import com.mparticle.kits.button.DeferredDeepLinkHandler;
+import com.mparticle.kits.button.DeferredAttributionHandler;
 import com.mparticle.kits.button.HostInformation;
 import com.mparticle.kits.button.IdentifierForAdvertiserProvider;
 import com.mparticle.kits.button.Storage;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.mparticle.kits.button.Constants.DeepLink;
+import static com.mparticle.kits.button.Constants.Attribution;
 
 /**
  * Minimal implementation of some of <a href="https://www.usebutton.com>Buttons</a> functionality, specifically:
  * <ul>
- * <li>Deferred deep linking</li>
+ * <li>Deferred attribution</li>
  * </ul>
  */
-public class ButtonKit extends KitIntegration implements KitIntegration.ActivityListener {
+public class ButtonKit extends KitIntegration implements KitIntegration.ActivityListener, KitIntegration.ApplicationStateListener {
 
     private static final String TAG = "ButtonKit";
     private static final String ATTRIBUTE_REFERRER = "com.usebutton.source_token";
@@ -66,6 +64,7 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
         Uri data = MParticle.getInstance().getAppStateManager().getLaunchUri();
         String action = MParticle.getInstance().getAppStateManager().getLaunchAction();
         handleIntent(data, action);
+        checkForAttribution();
         return null;
     }
 
@@ -74,26 +73,26 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
         return null;
     }
 
-    @Override
-    public void checkForDeepLink() {
-        final DeepLinkListener onLink = new DeepLinkListener() {
+
+    private void checkForAttribution() {
+        final AttributionListener onLink = new AttributionListener() {
             @Override
-            public void onDeepLink(final Intent deepLinkIntent) {
-                    DeepLinkResult result = new DeepLinkResult()
-                            .setLink(deepLinkIntent.getDataString())
+            public void onAttribution(final Intent attributionIntent) {
+                    AttributionResult result = new AttributionResult()
+                            .setLink(attributionIntent.getDataString())
                             .setServiceProviderId(getConfiguration().getKitId());
                     getKitManager().onResult(result);
             }
 
             @Override
-            public void onNoDeepLink() {
-                DeepLinkError deepLinkError = new DeepLinkError()
-                        .setMessage("No pending deep link. ")
+            public void onNoAttribution() {
+                AttributionError attributionError = new AttributionError()
+                        .setMessage("No pending attribution link. ")
                         .setServiceProviderId(getConfiguration().getKitId());
-                getKitManager().onError(deepLinkError);
+                getKitManager().onError(attributionError);
             }
         };
-        new DeferredDeepLinkHandler(getContext(), mStorage, mApi, onLink).check();
+        new DeferredAttributionHandler(getContext(), mStorage, mApi, onLink).check();
     }
 
     @Override
@@ -173,14 +172,14 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
         if (data == null || data.isOpaque()) {
             return;
         }
-        final String referrer = data.getQueryParameter(DeepLink.QUERY_REFERRER);
-        final String compatReferrer = data.getQueryParameter(DeepLink.QUERY_REFERRER_COMPAT);
+        final String referrer = data.getQueryParameter(Attribution.QUERY_REFERRER);
+        final String compatReferrer = data.getQueryParameter(Attribution.QUERY_REFERRER_COMPAT);
         final String referrerValue = referrer != null ? referrer : compatReferrer;
         if (referrerValue == null) {
             return;
         }
-        ButtonLog.visibleFormat("Deep link received (Attribution token: %s)", referrerValue);
-        ButtonLog.verboseFormat(TAG, "Incoming deep link: %s", data.toString());
+        ButtonLog.visibleFormat("Attribution received (Attribution token: %s)", referrerValue);
+        ButtonLog.verboseFormat(TAG, "Incoming attribution: %s", data.toString());
         doChangeReferrer(referrerValue);
     }
 
@@ -225,4 +224,14 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
 
     @Override
     public List<ReportingMessage> onActivityDestroyed(final Activity activity) { return null; }
+
+    @Override
+    public void onApplicationForeground() {
+        checkForAttribution();
+    }
+
+    @Override
+    public void onApplicationBackground() {
+
+    }
 }

@@ -1,13 +1,9 @@
 package com.mparticle.kits.button;
 
-import android.net.Uri;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import static com.mparticle.kits.button.JsonBuilder.toArray;
@@ -148,7 +144,7 @@ public class ButtonApi {
         return value != null ? value : JSONObject.NULL;
     }
 
-    public DeferredDeepLinkDTO getPendingLink(final JSONObject signals) throws ButtonNetworkException {
+    public DeferredAttributionDTO getPendingLink(final JSONObject signals) throws ButtonNetworkException {
         final JSONObject parameters = new JSONObject();
         try {
             parameters.put("application_id", getApplicationId());
@@ -157,7 +153,7 @@ public class ButtonApi {
             parameters.putOpt("android_id", mIdentifierForAdvertiserProvider.getSecondaryIdentifier());
             final Request.Post request = new Request.Post(urlFor("/v1/web/deferred-deeplink"));
             request.withBody(parameters);
-            return DeferredDeepLinkDTO.fromJson(mHttp.executeRequest(request).optJSONObject("object"));
+            return DeferredAttributionDTO.fromJson(mHttp.executeRequest(request).optJSONObject("object"));
         } catch (JSONException e) {
             throw new ButtonNetworkException("Couldn't get pending deep link.", e);
         }

@@ -5,7 +5,7 @@ import android.net.Uri;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class DeferredDeepLinkDTO {
+public class DeferredAttributionDTO {
     public final String id;
     public final boolean match;
     // Null if no match
@@ -13,15 +13,15 @@ public class DeferredDeepLinkDTO {
     // Null if no match
     public final AttributionDTO attribution;
 
-    public DeferredDeepLinkDTO(final String id, final boolean match, final Uri action,
-                               final AttributionDTO attrDto) {
+    public DeferredAttributionDTO(final String id, final boolean match, final Uri action,
+                                  final AttributionDTO attrDto) {
         this.id = id;
         this.match = match;
         this.action = action;
         attribution = attrDto;
     }
 
-    public static DeferredDeepLinkDTO fromJson(final JSONObject object) throws JSONException {
+    public static DeferredAttributionDTO fromJson(final JSONObject object) throws JSONException {
         if (object == null) {
             return null;
         }
@@ -30,7 +30,7 @@ public class DeferredDeepLinkDTO {
         if (attribution != null) {
             attrDto = new AttributionDTO(attribution.optString("btn_ref"), attribution.optString("utm_source"));
         }
-        return new DeferredDeepLinkDTO(object.getString("id"), object.optBoolean("match", false), uriOrNull(object, "action"), attrDto);
+        return new DeferredAttributionDTO(object.getString("id"), object.optBoolean("match", false), uriOrNull(object, "action"), attrDto);
     }
 
     private static Uri uriOrNull(final JSONObject object, final String name) throws JSONException {
@@ -60,7 +60,7 @@ public class DeferredDeepLinkDTO {
 
     @Override
     public String toString() {
-        return "DeferredDeepLinkDTO{" +
+        return "DeferredAttributionDTO{" +
                 "id='" + id + '\'' +
                 ", match=" + match +
                 ", action=" + action +
