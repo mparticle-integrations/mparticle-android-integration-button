@@ -17,6 +17,8 @@ import com.mparticle.kits.button.DeferredAttributionHandler;
 import com.mparticle.kits.button.HostInformation;
 import com.mparticle.kits.button.IdentifierForAdvertiserProvider;
 import com.mparticle.kits.button.Storage;
+import com.mparticle.kits_core.KitIntegration;
+import com.mparticle.kits_core.ReportingMessage;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -31,7 +33,7 @@ import static com.mparticle.kits.button.Constants.Attribution;
  * <li>Deferred attribution</li>
  * </ul>
  */
-public class ButtonKit extends KitIntegration implements KitIntegration.ActivityListener, KitIntegration.ApplicationStateListener {
+public class ButtonKit extends AbstractKitIntegration implements KitIntegration.ActivityListener, KitIntegration.ApplicationStateListener {
 
     private static final String TAG = "ButtonKit";
     private static final String ATTRIBUTE_REFERRER = "com.usebutton.source_token";
@@ -50,7 +52,7 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
     }
 
     @Override
-    protected List<ReportingMessage> onKitCreate(Map<String, String> settings, Context context) {
+    public List<ReportingMessage> onKitCreate(Map<String, String> settings, Context context) {
         final String applicationId = settings.get("application_id");
         if (KitUtils.isEmpty(applicationId)) {
 
