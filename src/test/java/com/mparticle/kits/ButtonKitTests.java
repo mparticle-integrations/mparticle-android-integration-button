@@ -3,7 +3,7 @@ package com.mparticle.kits;
 
 import android.content.Context;
 
-import com.mparticle.kits_core.KitIntegration;
+import com.mparticle.kits.core.KitIntegration;
 
 import org.junit.Test;
 import org.mockito.Mockito;

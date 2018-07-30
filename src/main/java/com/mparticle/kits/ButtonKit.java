@@ -17,8 +17,8 @@ import com.mparticle.kits.button.DeferredAttributionHandler;
 import com.mparticle.kits.button.HostInformation;
 import com.mparticle.kits.button.IdentifierForAdvertiserProvider;
 import com.mparticle.kits.button.Storage;
-import com.mparticle.kits_core.KitIntegration;
-import com.mparticle.kits_core.ReportingMessage;
+import com.mparticle.kits.core.KitIntegration;
+import com.mparticle.kits.core.ReportingMessage;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -83,7 +83,7 @@ public class ButtonKit extends AbstractKitIntegration implements KitIntegration.
                     AttributionResult result = new AttributionResult()
                             .setLink(attributionIntent.getDataString())
                             .setServiceProviderId(getConfiguration().getKitId());
-                    getKitManager().onResult(result);
+                    getAttributionListener().onResult(result);
             }
 
             @Override
@@ -91,7 +91,7 @@ public class ButtonKit extends AbstractKitIntegration implements KitIntegration.
                 AttributionError attributionError = new AttributionError()
                         .setMessage("No pending attribution link. ")
                         .setServiceProviderId(getConfiguration().getKitId());
-                getKitManager().onError(attributionError);
+                getAttributionListener().onError(attributionError);
             }
         };
         new DeferredAttributionHandler(getContext(), mStorage, mApi, onLink).check();
