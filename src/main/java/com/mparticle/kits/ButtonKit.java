@@ -18,6 +18,9 @@ import com.mparticle.kits.button.HostInformation;
 import com.mparticle.kits.button.IdentifierForAdvertiserProvider;
 import com.mparticle.kits.button.Storage;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.List;
@@ -30,11 +33,16 @@ import static com.mparticle.kits.button.Constants.Attribution;
  * <ul>
  * <li>Deferred attribution</li>
  * </ul>
+ *
+ *
+ * The kit do the following:
+ * 1. Check for deferred deep link on initial startup and return an attribution result or error if not found.
+ * 2. Every time an Activity is triggered with a URI that contains the button ref, return an attribution result.
  */
 public class ButtonKit extends KitIntegration implements KitIntegration.ActivityListener, KitIntegration.ApplicationStateListener {
 
     private static final String TAG = "ButtonKit";
-    private static final String ATTRIBUTE_REFERRER = "com.usebutton.source_token";
+    public static final String ATTRIBUTE_REFERRER = "com.usebutton.source_token";
     private ButtonApi mApi;
     private Storage mStorage;
     private static final String ACTION_REFERRER = "com.android.vending.INSTALL_REFERRER";
@@ -53,7 +61,6 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
     protected List<ReportingMessage> onKitCreate(Map<String, String> settings, Context context) {
         final String applicationId = settings.get("application_id");
         if (KitUtils.isEmpty(applicationId)) {
-
             throw new IllegalArgumentException("No Button application ID provided, can't initialize kit.");
         }
 
@@ -64,7 +71,10 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
         Uri data = MParticle.getInstance().getAppStateManager().getLaunchUri();
         String action = MParticle.getInstance().getAppStateManager().getLaunchAction();
         handleIntent(data, action);
-        checkForAttribution();
+
+        if (!mStorage.didCheckForDeferredDeepLink()) {
+            checkForAttribution();
+        }
         return null;
     }
 
@@ -78,16 +88,13 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
         final AttributionListener onLink = new AttributionListener() {
             @Override
             public void onAttribution(final Intent attributionIntent) {
-                    AttributionResult result = new AttributionResult()
-                            .setLink(attributionIntent.getDataString())
-                            .setServiceProviderId(getConfiguration().getKitId());
-                    getKitManager().onResult(result);
+                handleIntentData(attributionIntent.getData());
             }
 
             @Override
             public void onNoAttribution() {
                 AttributionError attributionError = new AttributionError()
-                        .setMessage("No pending attribution link. ")
+                        .setMessage("No pending deferred deep link. ")
                         .setServiceProviderId(getConfiguration().getKitId());
                 getKitManager().onError(attributionError);
             }
@@ -161,9 +168,8 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
         return null;
     }
 
-
-    protected void handleIntentData(final Uri data) {
-        /**
+    private void handleIntentData(final Uri data) {
+        /*
          * opaque Urls (<scheme>:<scheme specific part>#<fragment>) throw on access to query parameters
          * let's ignore all of these.
          *
@@ -181,9 +187,20 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
         ButtonLog.visibleFormat("Attribution received (Attribution token: %s)", referrerValue);
         ButtonLog.verboseFormat(TAG, "Incoming attribution: %s", data.toString());
         doChangeReferrer(referrerValue);
+        JSONObject parameters = new JSONObject();
+        try {
+            parameters.put(ATTRIBUTE_REFERRER, referrer);
+        } catch (JSONException ignore) {
+
+        }
+        AttributionResult result = new AttributionResult()
+                .setLink(data.toString())
+                .setParameters(parameters)
+                .setServiceProviderId(getConfiguration().getKitId());
+        getKitManager().onResult(result);
     }
 
-    protected void doChangeReferrer(final String referrer) {
+    private void doChangeReferrer(final String referrer) {
         // We only want to track and change when the referrer actually changes.
         if (referrer == null) {
             return;
@@ -227,7 +244,9 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
 
     @Override
     public void onApplicationForeground() {
-        checkForAttribution();
+        if (!mStorage.didCheckForDeferredDeepLink()) {
+            checkForAttribution();
+        }
     }
 
     @Override
