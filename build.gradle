@@ -9,6 +9,11 @@ buildscript {
     }
 }
 
+allprojects {
+    repositories {
+        google()
+    }
+}
 
 apply plugin: 'com.mparticle.kit'
 
@@ -16,4 +21,8 @@ android {
     defaultConfig {
         consumerProguardFiles 'consumer-proguard.pro'
     }
+}
+
+dependencies {
+    api 'com.usebutton.merchant:button-merchant:1.0.0'
 }
