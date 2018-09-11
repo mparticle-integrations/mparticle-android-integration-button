@@ -10,18 +10,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.usebutton.merchant.ButtonMerchant;
-import com.usebutton.merchant.Order;
 import com.usebutton.merchant.PostInstallIntentListener;
-import com.usebutton.merchant.UserActivityListener;
 
 import com.mparticle.MParticle;
-import com.mparticle.commerce.CommerceEvent;
-import com.mparticle.commerce.Product;
-import com.mparticle.identity.MParticleUser;
 import com.mparticle.internal.Logger;
 
-import java.math.BigDecimal;
-import java.util.Currency;
 import java.util.List;
 import java.util.Map;
 
@@ -30,10 +23,7 @@ import java.util.Map;
  *
  * Learn more at our <a href="https://developer.usebutton.com/guides/merchants/android/button-merchant-integration-guide">Developer Docs</a>
  */
-public class ButtonKit extends KitIntegration implements
-        KitIntegration.CommerceListener,
-        KitIntegration.IdentityListener,
-        KitIntegration.ActivityListener {
+public class ButtonKit extends KitIntegration implements KitIntegration.ActivityListener {
 
     @Override
     public String getName() {
@@ -113,149 +103,19 @@ public class ButtonKit extends KitIntegration implements
         return ButtonMerchant.getAttributionToken(getApplicationContext());
     }
 
-    /**
-     * Tracks orders
-     *
-     * @param order {@link Order}
-     */
-    public void trackOrder(@NonNull final Order order) {
-        trackOrder(order, new UserActivityListener() {
-            @Override
-            public void onResult(@Nullable Throwable throwable) {
-                if (throwable != null) {
-                    logError("Unable to track order", throwable);
-                } else {
-                    logDebug("Successfully tracked order %s", order.getId());
-                }
-            }
-        });
-    }
-
-    /**
-     * Tracks orders
-     *
-     * @param order {@link Order}
-     * @param listener {@link UserActivityListener}
-     */
-    public void trackOrder(@NonNull Order order, @Nullable UserActivityListener listener) {
-        logDebug("Beginning to track order %s", order.getId());
-        ButtonMerchant.trackOrder(getApplicationContext(), order, listener);
-    }
-
-    /**
-     * Checks the passed {@code Intent} for a Button attribution and if present stores the token.
-     *
-     * @param intent An intent that has entered your app from a third party source.
-     */
-    public void trackIncomingIntent(@NonNull Intent intent) {
-        ButtonMerchant.trackIncomingIntent(getApplicationContext(), intent);
-    }
-
-    /**
-     * Discards the current session and all persisted data.
-     */
-    public void clearAllData() {
-        logDebug("Clearing Button session.");
-        ButtonMerchant.clearAllData(getApplicationContext());
-    }
-
-    /*
-     * Overrides for the CommerceListener
-     */
-
-    @Override
-    public List<ReportingMessage> logLtvIncrease(BigDecimal bigDecimal, BigDecimal bigDecimal1,
-            String s, Map<String, String> map) {
-        return null;
-    }
-
-    @Override
-    public List<ReportingMessage> logEvent(CommerceEvent event) {
-
-        if (!KitUtils.isEmpty(event.getProductAction()) &&
-                event.getProductAction().equalsIgnoreCase(Product.PURCHASE) &&
-                !event.getProducts().isEmpty()) {
-
-            // Prepare the order and track it to Button
-            final Order order = prepareOrder(event);
-            if (order != null) {
-                trackOrder(order);
-            }
-        }
-        return null;
-    }
-
-    private Order prepareOrder(CommerceEvent event) {
-        logDebug("Preparing order for %s", event.getTransactionAttributes().getId());
-
-        String orderId = event.getTransactionAttributes().getId();
-        String currCode = event.getCurrency();
-        if (KitUtils.isEmpty(currCode)) {
-            currCode = CommerceEventUtils.Constants.DEFAULT_CURRENCY_CODE;
-        }
-
-        int e = Currency.getInstance(currCode).getDefaultFractionDigits();
-        if (e < 0) {
-            logError(currCode + " is not a valid currency code. Please conform to ISO4217.");
-            return null;
-        }
-        double total = 0.00;
-        for (Product product : event.getProducts()) {
-            total += product.getUnitPrice();
-        }
-        long orderTotal = Math.round(total * Math.pow(10, e));
-
-        return new Order.Builder(orderId)
-                .setCurrencyCode(currCode)
-                .setAmount(orderTotal)
-                .build();
-    }
-
-    /*
-     * Overrides for IdentityListener
-     */
-
-    @Override
-    public void onIdentifyCompleted(MParticleUser mParticleUser,
-            FilteredIdentityApiRequest filteredIdentityApiRequest) {
-
-    }
-
-    @Override
-    public void onLoginCompleted(MParticleUser mParticleUser,
-            FilteredIdentityApiRequest filteredIdentityApiRequest) {
-
-    }
-
-    @Override
-    public void onLogoutCompleted(MParticleUser mParticleUser,
-            FilteredIdentityApiRequest filteredIdentityApiRequest) {
-        clearAllData();
-    }
-
-    @Override
-    public void onModifyCompleted(MParticleUser mParticleUser,
-            FilteredIdentityApiRequest filteredIdentityApiRequest) {
-
-    }
-
-    @Override
-    public void onUserIdentified(MParticleUser mParticleUser) {
-
-    }
-
     /*
      * Overrides for ActivityListener
      */
 
     @Override
     public List<ReportingMessage> onActivityCreated(Activity activity, Bundle bundle) {
-        trackIncomingIntent(activity.getIntent());
+        ButtonMerchant.trackIncomingIntent(getApplicationContext(), activity.getIntent());
         return null;
     }
 
     @Override
     public List<ReportingMessage> onActivityStarted(Activity activity) {
+        ButtonMerchant.trackIncomingIntent(getApplicationContext(), activity.getIntent());
         return null;
     }
 
@@ -294,16 +154,8 @@ public class ButtonKit extends KitIntegration implements
         }
     }
 
-    private static void logError(String message) {
-        if (MParticle.getInstance().getEnvironment() == MParticle.Environment.Development) {
-            Logger.error("ButtonKit: " + message);
-        }
-    }
-
     private static void logError(String message, Throwable t) {
-        if (MParticle.getInstance().getEnvironment() == MParticle.Environment.Development) {
-            Logger.error(t, "ButtonKit: " + message);
-        }
+        Logger.error(t, "ButtonKit: " + message);
     }
 
     private Context getApplicationContext() {
