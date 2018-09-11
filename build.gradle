@@ -24,5 +24,7 @@ android {
 }
 
 dependencies {
-    implementation 'com.usebutton.merchant:button-merchant:1+'
+    implementation 'com.usebutton.merchant:button-merchant:1.0.0'
+
+    testImplementation 'com.squareup.assertj:assertj-android:1.1.1'
 }

@@ -8,11 +8,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
 import com.usebutton.merchant.ButtonMerchant;
 import com.usebutton.merchant.PostInstallIntentListener;
 
-import com.mparticle.MParticle;
 import com.mparticle.internal.Logger;
 
 import java.util.List;
@@ -24,6 +24,12 @@ import java.util.Map;
  * Learn more at our <a href="https://developer.usebutton.com/guides/merchants/android/button-merchant-integration-guide">Developer Docs</a>
  */
 public class ButtonKit extends KitIntegration implements KitIntegration.ActivityListener {
+
+    private Context applicationContext;
+    @VisibleForTesting
+    ButtonMerchantWrapper merchant = new ButtonMerchantWrapper();
+    @VisibleForTesting
+    MParticleWrapper mParticle = new MParticleWrapper();
 
     @Override
     public String getName() {
@@ -37,6 +43,7 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
 
     @Override
     protected List<ReportingMessage> onKitCreate(Map<String, String> settings, final Context ctx) {
+        applicationContext = ctx.getApplicationContext();
         final String applicationId = settings.get("application_id");
         if (KitUtils.isEmpty(applicationId)) {
             throw new IllegalArgumentException(
@@ -49,10 +56,10 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
             );
         }
 
-        ButtonMerchant.configure(getApplicationContext(), applicationId);
+        merchant.configure(applicationContext, applicationId);
         logDebug("Button Attribution Token: %s", getAttributionToken());
 
-        ButtonMerchant.addAttributionTokenListener(getApplicationContext(),
+        merchant.addAttributionTokenListener(applicationContext,
                 new ButtonMerchant.AttributionTokenListener() {
                     @Override
                     public void onAttributionTokenChanged(@NonNull String s) {
@@ -60,14 +67,14 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
                     }
                 });
 
-        ButtonMerchant.handlePostInstallIntent(getApplicationContext(),
+        merchant.handlePostInstallIntent(applicationContext,
                 new PostInstallIntentListener() {
                     @Override
                     public void onResult(@Nullable Intent intent, @Nullable Throwable throwable) {
-                        PackageManager pm = getApplicationContext().getPackageManager();
+                        PackageManager pm = applicationContext.getPackageManager();
                         if (intent != null && intent.resolveActivity(pm) != null) {
                             logDebug("Handling post-install intent for %s", intent.toString());
-                            getApplicationContext().startActivity(intent);
+                            applicationContext.startActivity(intent);
                         } else if (throwable != null) {
                             logError("Error checking post install intent", throwable);
                         }
@@ -100,7 +107,7 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
      **/
     @Nullable
     public String getAttributionToken() {
-        return ButtonMerchant.getAttributionToken(getApplicationContext());
+        return merchant.getAttributionToken(applicationContext);
     }
 
     /*
@@ -109,13 +116,13 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
 
     @Override
     public List<ReportingMessage> onActivityCreated(Activity activity, Bundle bundle) {
-        ButtonMerchant.trackIncomingIntent(getApplicationContext(), activity.getIntent());
+        merchant.trackIncomingIntent(applicationContext, activity.getIntent());
         return null;
     }
 
     @Override
     public List<ReportingMessage> onActivityStarted(Activity activity) {
-        ButtonMerchant.trackIncomingIntent(getApplicationContext(), activity.getIntent());
+        merchant.trackIncomingIntent(applicationContext, activity.getIntent());
         return null;
     }
 
@@ -148,17 +155,13 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
      * Utility methods
      */
 
-    private static void logDebug(String message, Object... args) {
-        if (MParticle.getInstance().getEnvironment() == MParticle.Environment.Development) {
+    private void logDebug(String message, Object... args) {
+        if (mParticle.isDebuggingEnvironment()) {
             Logger.debug(String.format("ButtonKit: " + message, args));
         }
     }
 
-    private static void logError(String message, Throwable t) {
+    private void logError(String message, Throwable t) {
         Logger.error(t, "ButtonKit: " + message);
-    }
-
-    private Context getApplicationContext() {
-        return getContext().getApplicationContext();
     }
 }
