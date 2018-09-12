@@ -18,20 +18,6 @@ This repository contains the [Button](https://www.usebutton.com/) integration fo
 
 [Button integration](http://docs.mparticle.com/?java#button)
 
-### Further Development
-
-To develop/update the ButtonKit locally, make the following changes to the module's `build.gradle`:
-1. Modify the the mParticle dependency classpath to use the latest SDK:
-    ```groovy
-    dependencies {
-        classpath 'com.mparticle:android-kit-plugin:+'
-    }
-    ```
-2. Add a `project.version` variable targeting the latest SDK. For example:
-    ```groovy
-    project.version = '5.4.0'
-    ```
-
 ### License
 
 [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0)
