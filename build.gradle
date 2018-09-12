@@ -9,17 +9,15 @@ buildscript {
     }
 }
 
-allprojects {
-    repositories {
-        google()
-    }
-}
-
 apply plugin: 'com.mparticle.kit'
 
 android {
     defaultConfig {
         consumerProguardFiles 'consumer-proguard.pro'
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
     }
 }
 
