@@ -1,4 +1,7 @@
+
 buildscript {
+    project.version = "${project.version != 'unspecified' ? project.version : '5.4.4'}"
+
     repositories {
         google()
         mavenLocal()
@@ -7,6 +10,10 @@ buildscript {
     dependencies {
         classpath 'com.mparticle:android-kit-plugin:' + project.version
     }
+}
+
+repositories {
+    google()
 }
 
 apply plugin: 'com.mparticle.kit'
@@ -20,10 +27,6 @@ android {
     testOptions {
         unitTests.returnDefaultValues = true
     }
-}
-
-repositories {
-    google()
 }
 
 dependencies {
