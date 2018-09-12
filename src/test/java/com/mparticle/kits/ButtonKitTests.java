@@ -5,7 +5,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
@@ -138,7 +137,7 @@ public class ButtonKitTests {
     public void onResult_shouldSetAttributionErrorOnNoIntent() {
         buttonKit.onKitCreate(settings, context);
         buttonKit.onResult(null, null);
-        assertThat(kitManager.error.getMessage()).isEqualTo("No pending attribution link.");
+        assertThat(kitManager.error.getMessage()).isEqualTo("No pending post-install deep link.");
         assertThat(kitManager.error.getServiceProviderId()).isEqualTo(TEST_KIT_ID);
     }
 

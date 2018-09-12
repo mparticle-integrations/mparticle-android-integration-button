@@ -28,7 +28,7 @@ import java.util.Map;
 public class ButtonKit extends KitIntegration implements KitIntegration.ActivityListener,
         ButtonMerchant.AttributionTokenListener, PostInstallIntentListener {
 
-    static final String ATTRIBUTE_REFERRER = "com.usebutton.source_token";
+    public static final String ATTRIBUTE_REFERRER = "com.usebutton.source_token";
 
     private Context applicationContext;
     @VisibleForTesting
@@ -119,13 +119,17 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
             getKitManager().onResult(result);
         } else {
             AttributionError attributionError = new AttributionError()
-                    .setMessage("No pending attribution link.")
+                    .setMessage("No pending post-install deep link.")
                     .setServiceProviderId(getConfiguration().getKitId());
             getKitManager().onError(attributionError);
         }
 
         if (throwable != null) {
             logError("Error checking post install intent", throwable);
+            AttributionError attributionError = new AttributionError()
+                    .setMessage(throwable.getMessage())
+                    .setServiceProviderId(getConfiguration().getKitId());
+            getKitManager().onError(attributionError);
         }
     }
 

@@ -13,6 +13,7 @@ apply plugin: 'com.mparticle.kit'
 
 android {
     defaultConfig {
+        minSdkVersion 15
         consumerProguardFiles 'consumer-proguard.pro'
     }
 
@@ -21,8 +22,12 @@ android {
     }
 }
 
+repositories {
+    google()
+}
+
 dependencies {
-    implementation 'com.usebutton.merchant:button-merchant:1.0.0'
+    api 'com.usebutton.merchant:button-merchant:1.0.0'
 
     testImplementation 'com.squareup.assertj:assertj-android:1.1.1'
 }
