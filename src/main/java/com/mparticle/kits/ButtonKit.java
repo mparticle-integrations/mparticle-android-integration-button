@@ -117,11 +117,6 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
                     .setLink(intent.getDataString())
                     .setServiceProviderId(getConfiguration().getKitId());
             getKitManager().onResult(result);
-        } else {
-            AttributionError attributionError = new AttributionError()
-                    .setMessage("No pending post-install deep link.")
-                    .setServiceProviderId(getConfiguration().getKitId());
-            getKitManager().onError(attributionError);
         }
 
         if (throwable != null) {

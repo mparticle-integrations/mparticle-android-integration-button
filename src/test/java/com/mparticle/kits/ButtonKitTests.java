@@ -134,14 +134,6 @@ public class ButtonKitTests {
     }
 
     @Test
-    public void onResult_shouldSetAttributionErrorOnNoIntent() {
-        buttonKit.onKitCreate(settings, context);
-        buttonKit.onResult(null, null);
-        assertThat(kitManager.error.getMessage()).isEqualTo("No pending post-install deep link.");
-        assertThat(kitManager.error.getServiceProviderId()).isEqualTo(TEST_KIT_ID);
-    }
-
-    @Test
     public void onActivityCreated_shouldTrackIncomingIntent() {
         Activity activity = mock(Activity.class);
         Intent intent = new Intent();
