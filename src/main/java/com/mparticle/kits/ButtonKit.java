@@ -61,8 +61,8 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
         final IdentifierForAdvertiserProvider ifaProvider = new IdentifierForAdvertiserProvider(context);
         mApi = new ButtonApi(hostInformation, ifaProvider);
         mStorage = new Storage(context, applicationId);
-        Uri data = MParticle.getInstance().getAppStateManager().getLaunchUri();
-        String action = MParticle.getInstance().getAppStateManager().getLaunchAction();
+        Uri data = getKitManager().getLaunchUri();
+        String action = getKitManager().getLaunchAction();
         handleIntent(data, action);
         checkForAttribution();
         return null;
