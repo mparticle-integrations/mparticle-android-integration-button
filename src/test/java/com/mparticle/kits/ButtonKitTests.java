@@ -153,6 +153,16 @@ public class ButtonKitTests {
         verify(merchant).trackIncomingIntent(context, intent);
     }
 
+    @Test
+    public void onActivityResumed_shouldTrackIncomingIntent() {
+        Activity activity = mock(Activity.class);
+        Intent intent = new Intent();
+        when(activity.getIntent()).thenReturn(intent);
+        buttonKit.onKitCreate(settings, context);
+        buttonKit.onActivityResumed(activity);
+        verify(merchant).trackIncomingIntent(context, intent);
+    }
+
     /*
      * Test Helpers
      */

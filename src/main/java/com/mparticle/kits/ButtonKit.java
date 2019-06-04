@@ -146,6 +146,7 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
 
     @Override
     public List<ReportingMessage> onActivityResumed(Activity activity) {
+        merchant.trackIncomingIntent(applicationContext, activity.getIntent());
         return null;
     }
 
