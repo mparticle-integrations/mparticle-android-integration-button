@@ -1,4 +1,7 @@
+
 buildscript {
+    project.version = "${project.version != 'unspecified' ? project.version : '5.4.4'}"
+
     repositories {
         google()
         mavenLocal()
@@ -9,11 +12,25 @@ buildscript {
     }
 }
 
+repositories {
+    google()
+}
 
 apply plugin: 'com.mparticle.kit'
 
 android {
     defaultConfig {
+        minSdkVersion 15
         consumerProguardFiles 'consumer-proguard.pro'
     }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+}
+
+dependencies {
+    api 'com.usebutton.merchant:button-merchant:1.0.0'
+
+    testImplementation 'com.squareup.assertj:assertj-android:1.1.1'
 }

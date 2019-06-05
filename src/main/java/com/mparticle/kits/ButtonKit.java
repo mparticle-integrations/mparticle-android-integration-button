@@ -3,41 +3,36 @@ package com.mparticle.kits;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
+
+import com.usebutton.merchant.ButtonMerchant;
+import com.usebutton.merchant.PostInstallIntentListener;
 
 import com.mparticle.AttributionError;
 import com.mparticle.AttributionResult;
-import com.mparticle.MParticle;
-import com.mparticle.kits.button.AttributionListener;
-import com.mparticle.kits.button.ButtonApi;
-import com.mparticle.kits.button.ButtonLog;
-import com.mparticle.kits.button.DeferredAttributionHandler;
-import com.mparticle.kits.button.HostInformation;
-import com.mparticle.kits.button.IdentifierForAdvertiserProvider;
-import com.mparticle.kits.button.Storage;
+import com.mparticle.internal.Logger;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map;
 
-import static com.mparticle.kits.button.Constants.Attribution;
-
 /**
- * Minimal implementation of some of <a href="https://www.usebutton.com>Buttons</a> functionality, specifically:
- * <ul>
- * <li>Deferred attribution</li>
- * </ul>
+ * MParticle embedded implementation of the <a href="https://github.com/button/button-merchant-android">Button Merchant Library</a>.
+ *
+ * Learn more at our <a href="https://developer.usebutton.com/guides/merchants/android/button-merchant-integration-guide">Developer Docs</a>
  */
-public class ButtonKit extends KitIntegration implements KitIntegration.ActivityListener, KitIntegration.ApplicationStateListener {
+public class ButtonKit extends KitIntegration implements KitIntegration.ActivityListener,
+        ButtonMerchant.AttributionTokenListener, PostInstallIntentListener {
 
-    private static final String TAG = "ButtonKit";
-    private static final String ATTRIBUTE_REFERRER = "com.usebutton.source_token";
-    private ButtonApi mApi;
-    private Storage mStorage;
-    private static final String ACTION_REFERRER = "com.android.vending.INSTALL_REFERRER";
+    public static final String ATTRIBUTE_REFERRER = "com.usebutton.source_token";
+
+    private Context applicationContext;
+    @VisibleForTesting
+    ButtonMerchantWrapper merchant = new ButtonMerchantWrapper();
 
     @Override
     public String getName() {
@@ -50,21 +45,19 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
     }
 
     @Override
-    protected List<ReportingMessage> onKitCreate(Map<String, String> settings, Context context) {
+    protected List<ReportingMessage> onKitCreate(Map<String, String> settings, final Context ctx) {
+        applicationContext = ctx.getApplicationContext();
         final String applicationId = settings.get("application_id");
         if (KitUtils.isEmpty(applicationId)) {
-
-            throw new IllegalArgumentException("No Button application ID provided, can't initialize kit.");
+            throwOnKitCreateError("No Button application ID provided, can't initialize kit.");
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
+            throwOnKitCreateError("App running in an < API 15 environment, can't initialize kit.");
         }
 
-        final HostInformation hostInformation = new HostInformation(context, applicationId);
-        final IdentifierForAdvertiserProvider ifaProvider = new IdentifierForAdvertiserProvider(context);
-        mApi = new ButtonApi(hostInformation, ifaProvider);
-        mStorage = new Storage(context, applicationId);
-        Uri data = getKitManager().getLaunchUri();
-        String action = getKitManager().getLaunchAction();
-        handleIntent(data, action);
-        checkForAttribution();
+        merchant.configure(applicationContext, applicationId);
+        merchant.addAttributionTokenListener(applicationContext, this);
+        merchant.handlePostInstallIntent(applicationContext, this);
         return null;
     }
 
@@ -73,165 +66,123 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
         return null;
     }
 
-
-    private void checkForAttribution() {
-        final AttributionListener onLink = new AttributionListener() {
-            @Override
-            public void onAttribution(final Intent attributionIntent) {
-                    AttributionResult result = new AttributionResult()
-                            .setLink(attributionIntent.getDataString())
-                            .setServiceProviderId(getConfiguration().getKitId());
-                    getKitManager().onResult(result);
-            }
-
-            @Override
-            public void onNoAttribution() {
-                AttributionError attributionError = new AttributionError()
-                        .setMessage("No pending attribution link. ")
-                        .setServiceProviderId(getConfiguration().getKitId());
-                getKitManager().onError(attributionError);
-            }
-        };
-        new DeferredAttributionHandler(getContext(), mStorage, mApi, onLink).check();
-    }
-
-    @Override
-    public void setInstallReferrer(final Intent intent) {
-        super.setInstallReferrer(intent);
-        if (intent == null) {
-            return;
-        }
-        try {
-            if (!ACTION_REFERRER.equals(intent.getAction())) {
-                ButtonLog.warnFormat(TAG, "Expected action '%s', but got action: '%s'", ACTION_REFERRER, intent.getAction());
-                return;
-            }
-            final String referrerRaw = intent.getStringExtra("referrer");
-            Log.d(TAG, "Received install referrer: " + referrerRaw);
-            if (KitUtils.isEmpty(referrerRaw)) {
-                ButtonLog.visible("Recorded installation without referrer, ignore.");
-                return;
-            }
-            final String existingReferrer = mStorage.getInstallReferrer();
-            if (!KitUtils.isEmpty(existingReferrer)) {
-                ButtonLog.visibleFormat("Installation already attributed, ignoring new value. (Existing: %s, Ignored: %s)", existingReferrer, referrerRaw);
-                return;
-            }
-            String referrer;
-            try {
-                referrer = URLDecoder.decode(referrerRaw, "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                // Let's fallback to raw value if decoding fails.
-                Log.e(TAG, "Failed to decode referrer '" + referrerRaw + "'", e);
-                referrer = referrerRaw;
-            }
-            ButtonLog.visibleFormat("Recorded installation with referrer. (Referrer: %s, Raw: %s).", referrer, referrerRaw);
-            mStorage.setInstallReferrer(referrer);
-        } catch (Throwable caught) {
-            ButtonLog.warn(TAG, "Exception while handling install referrer intent." + intent, caught);
-        }
-    }
+    /*
+     * Public methods to expose important Merchant Library methods
+     */
 
     /**
-     * Get the Button referrer token which should be attached to any orders reported and attributed
-     * to the Button network.
+     * Get the Button attribution token which should be attached to any orders reported and
+     * attributed to the Button network.
+     *
+     * For attribution to work correctly, you must:
+     * <ul>
+     * <li>Always access this token directly—*never cache it*.</li>
+     * <li>Never manage the lifecycle of this token—Button manages the token validity window
+     * server-side.</li>
+     * <li>Always include this value when reporting orders to your order API.</li>
+     * </ul>
      *
      * <pre>
-     * final ButtonKit button = (ButtonKit) MParticle.getInstance().getKitInstance(MParticle.ServiceProviders.BUTTON);
+     * ButtonKit button = (ButtonKit) MParticle.getInstance()
+     *         .getKitInstance(MParticle.ServiceProviders.BUTTON);
      * if (button != null) {
-     * final String referrerToken = button.getReferrerToken();
-     * if (referrerToken != null) {
-     *      // Use token with your order reporting.
-     *  }
+     *     String attributionToken = button.getAttributionToken();
+     *     if (attributionToken != null) {
+     *         // Use token with your order reporting.
+     *     }
      * }
      * </pre>
      *
-     * @return an opaque referrer string or null.
-     */
-    public String getReferrerToken() {
-        return mStorage.getReferrer();
+     * @return the last tracked Button attribution token.
+     **/
+    @Nullable
+    public String getAttributionToken() {
+        return merchant.getAttributionToken(applicationContext);
     }
 
-    private List<ReportingMessage> handleIntent(final Uri data, final String action) {
-        if (data == null || !Intent.ACTION_VIEW.equals(action)) {
-            return null;
-        }
-
-        handleIntentData(data);
-        return null;
-    }
-
-
-    protected void handleIntentData(final Uri data) {
-        /**
-         * opaque Urls (<scheme>:<scheme specific part>#<fragment>) throw on access to query parameters
-         * let's ignore all of these.
-         *
-         * @see Uri#getQueryParameter(String)
-         */
-        if (data == null || data.isOpaque()) {
-            return;
-        }
-        final String referrer = data.getQueryParameter(Attribution.QUERY_REFERRER);
-        final String compatReferrer = data.getQueryParameter(Attribution.QUERY_REFERRER_COMPAT);
-        final String referrerValue = referrer != null ? referrer : compatReferrer;
-        if (referrerValue == null) {
-            return;
-        }
-        ButtonLog.visibleFormat("Attribution received (Attribution token: %s)", referrerValue);
-        ButtonLog.verboseFormat(TAG, "Incoming attribution: %s", data.toString());
-        doChangeReferrer(referrerValue);
-    }
-
-    protected void doChangeReferrer(final String referrer) {
-        // We only want to track and change when the referrer actually changes.
-        if (referrer == null) {
-            return;
-        }
-        if (referrer.equals(mStorage.getReferrer())) return;
-        mStorage.setReferrer(referrer);
+    @Override
+    public void onAttributionTokenChanged(@NonNull String token) {
         final Map<String, String> attributes = getIntegrationAttributes();
-        attributes.put(ATTRIBUTE_REFERRER, referrer);
-        ButtonLog.verboseFormat(TAG, "Updated integration attributes to: %s", attributes);
+        attributes.put(ATTRIBUTE_REFERRER, token);
         setIntegrationAttributes(attributes);
+        logDebug("Refreshed Button Attribution Token: %s", token);
     }
 
     @Override
-    public List<ReportingMessage> onActivityCreated(final Activity activity, final Bundle savedInstanceState) {
+    public void onResult(@Nullable Intent intent, @Nullable Throwable throwable) {
+        PackageManager pm = applicationContext.getPackageManager();
+        if (intent != null && intent.resolveActivity(pm) != null) {
+            logDebug("Handling post-install intent for %s", intent.toString());
+            AttributionResult result = new AttributionResult()
+                    .setLink(intent.getDataString())
+                    .setServiceProviderId(getConfiguration().getKitId());
+            getKitManager().onResult(result);
+        }
+
+        if (throwable != null) {
+            logError("Error checking post install intent", throwable);
+            AttributionError attributionError = new AttributionError()
+                    .setMessage(throwable.getMessage())
+                    .setServiceProviderId(getConfiguration().getKitId());
+            getKitManager().onError(attributionError);
+        }
+    }
+
+    /*
+     * Overrides for ActivityListener
+     */
+
+    @Override
+    public List<ReportingMessage> onActivityCreated(Activity activity, Bundle bundle) {
+        merchant.trackIncomingIntent(applicationContext, activity.getIntent());
         return null;
     }
 
     @Override
-    public List<ReportingMessage> onActivityStarted(final Activity activity) {
-        Intent intent = activity.getIntent();
-        if (intent == null) {
-            return null;
-        }
-        return handleIntent(intent.getData(), intent.getAction());
+    public List<ReportingMessage> onActivityStarted(Activity activity) {
+        merchant.trackIncomingIntent(applicationContext, activity.getIntent());
+        return null;
     }
 
     @Override
-    public List<ReportingMessage> onActivityResumed(final Activity activity) { return null; }
-
-    @Override
-    public List<ReportingMessage> onActivityPaused(final Activity activity) { return null; }
-
-    @Override
-    public List<ReportingMessage> onActivityStopped(final Activity activity) { return null; }
-
-    @Override
-    public List<ReportingMessage> onActivitySaveInstanceState(final Activity activity, final Bundle outState) { return null; }
-
-    @Override
-    public List<ReportingMessage> onActivityDestroyed(final Activity activity) { return null; }
-
-    @Override
-    public void onApplicationForeground() {
-        checkForAttribution();
+    public List<ReportingMessage> onActivityResumed(Activity activity) {
+        merchant.trackIncomingIntent(applicationContext, activity.getIntent());
+        return null;
     }
 
     @Override
-    public void onApplicationBackground() {
+    public List<ReportingMessage> onActivityPaused(Activity activity) {
+        return null;
+    }
 
+    @Override
+    public List<ReportingMessage> onActivityStopped(Activity activity) {
+        return null;
+    }
+
+    @Override
+    public List<ReportingMessage> onActivitySaveInstanceState(Activity activity, Bundle bundle) {
+        return null;
+    }
+
+    @Override
+    public List<ReportingMessage> onActivityDestroyed(Activity activity) {
+        return null;
+    }
+
+    /*
+     * Utility methods
+     */
+
+    private void logDebug(String message, Object... args) {
+        Logger.debug(String.format("ButtonKit: " + message, args));
+    }
+
+    private void logError(String message, Throwable t) {
+        Logger.error(t, "ButtonKit: " + message);
+    }
+
+    private void throwOnKitCreateError(String message) {
+        throw new IllegalArgumentException(message);
     }
 }
