@@ -30,6 +30,7 @@ android {
 }
 
 dependencies {
+    implementation 'com.android.support:support-annotations:28.0.0'
     api 'com.usebutton.merchant:button-merchant:1.0.0'
 
     testImplementation 'com.squareup.assertj:assertj-android:1.1.1'
