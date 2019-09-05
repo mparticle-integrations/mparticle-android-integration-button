@@ -131,7 +131,8 @@ public class ButtonKitTests {
         when(intent.getDataString()).thenReturn(TEST_DEEP_LINK);
         when(intent.resolveActivity(any(PackageManager.class)))
                 .thenReturn(mock(ComponentName.class));
-
+        when(intent.resolveActivity(null))
+                .thenReturn(mock(ComponentName.class));
         buttonKit.onKitCreate(settings, context);
         buttonKit.onResult(intent, null);
         assertThat(kitManager.result.getLink()).isEqualTo(TEST_DEEP_LINK);
