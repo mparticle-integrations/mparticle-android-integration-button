@@ -1,6 +1,8 @@
 
 buildscript {
-    project.version = "${project.version != 'unspecified' ? project.version : '5.4.4'}"
+    if (!project.hasProperty('version') || project.version.equals('unspecified')) {
+        project.version = '+'
+    }
 
     repositories {
         google()
