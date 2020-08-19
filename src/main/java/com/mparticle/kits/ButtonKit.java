@@ -66,6 +66,12 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
         return null;
     }
 
+    @Override
+    protected void reset() {
+        super.reset();
+        merchant.clearAllData(applicationContext);
+    }
+
     /*
      * Public methods to expose important Merchant Library methods
      */
