@@ -34,4 +34,8 @@ public class ButtonMerchantWrapper {
             PostInstallIntentListener listener) {
         ButtonMerchant.handlePostInstallIntent(context, listener);
     }
+
+    public void clearAllData(@NonNull Context context) {
+        ButtonMerchant.clearAllData(context);
+    }
 }

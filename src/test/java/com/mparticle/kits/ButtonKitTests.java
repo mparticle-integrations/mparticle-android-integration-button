@@ -169,6 +169,13 @@ public class ButtonKitTests {
         verify(merchant).trackIncomingIntent(context, intent);
     }
 
+    @Test
+    public void reset_shouldClearAllData() {
+        buttonKit.onKitCreate(settings, context);
+        buttonKit.reset();
+        verify(merchant).clearAllData(context);
+    }
+
     /*
      * Test Helpers
      */
