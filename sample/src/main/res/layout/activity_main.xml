@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.widget.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".MainActivity"
     >
 
@@ -11,7 +11,9 @@
         android:id="@+id/tv_attribution_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         android:layout_marginTop="20dp"
         android:text="@string/title_token"
         style="@style/Base.TextAppearance.AppCompat.Title"
@@ -21,21 +23,57 @@
         android:id="@+id/tv_attribution_token"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/tv_attribution_title"
-        android:layout_centerHorizontal="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_attribution_title"
         android:layout_marginTop="5dp"
         android:text="@string/label_default_token"
         style="@style/Base.TextAppearance.AppCompat.Body1"
         />
 
-    <android.support.v7.widget.AppCompatButton
-        android:id="@+id/bt_attribution_refresh"
-        android:layout_width="wrap_content"
+    <android.support.v7.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:text="@string/label_refresh_token"
-        android:layout_centerVertical="true"
-        android:layout_marginTop="10dp"
-        />
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        >
 
-</android.widget.RelativeLayout>
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/bt_attribution_refresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/label_refresh_token"
+            />
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/bt_activity_product_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/label_view_product"
+            />
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/bt_activity_add_to_cart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/label_add_product"
+            />
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/bt_activity_cart_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/label_view_cart"
+            />
+
+    </android.support.v7.widget.LinearLayoutCompat>
+
+</android.support.constraint.ConstraintLayout>
