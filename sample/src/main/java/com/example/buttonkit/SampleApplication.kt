@@ -10,7 +10,7 @@ import com.mparticle.AttributionResult
 import com.mparticle.MParticle
 import com.mparticle.MParticleOptions
 
-class SampleApplication : Application() , AttributionListener{
+class SampleApplication : Application(), AttributionListener {
 
     private val TAG = "ButtonKitSample"
 
@@ -26,16 +26,16 @@ class SampleApplication : Application() , AttributionListener{
         MParticle.start(options)
     }
 
-    override fun onResult(result: AttributionResult?) {
-        if (result?.serviceProviderId == MParticle.ServiceProviders.BUTTON) {
+    override fun onResult(result: AttributionResult) {
+        if (result.serviceProviderId == MParticle.ServiceProviders.BUTTON) {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(result.link))
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)
         }
     }
 
-    override fun onError(error: AttributionError?) {
-        if (error?.serviceProviderId == MParticle.ServiceProviders.BUTTON) {
+    override fun onError(error: AttributionError) {
+        if (error.serviceProviderId == MParticle.ServiceProviders.BUTTON) {
             Log.e(TAG, "Attribution error: " + error.message)
         }
     }

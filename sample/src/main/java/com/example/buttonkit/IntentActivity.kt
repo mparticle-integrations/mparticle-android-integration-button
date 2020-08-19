@@ -14,7 +14,7 @@ class IntentActivity : AppCompatActivity() {
 
         actionBar?.setDisplayShowHomeEnabled(true)
 
-        val button = MParticle.getInstance().getKitInstance(
+        val button = MParticle.getInstance()?.getKitInstance(
                 MParticle.ServiceProviders.BUTTON) as ButtonKit?
 
         tv_attribution_token.text = button?.attributionToken
