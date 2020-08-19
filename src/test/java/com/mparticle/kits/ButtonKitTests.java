@@ -9,20 +9,27 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
+import com.usebutton.merchant.ButtonProductCompatible;
+
 import com.mparticle.AttributionError;
 import com.mparticle.AttributionResult;
 import com.mparticle.MParticle;
+import com.mparticle.commerce.CommerceEvent;
+import com.mparticle.commerce.Product;
 import com.mparticle.identity.IdentityApi;
 import com.mparticle.internal.CoreCallbacks;
 
 import org.json.JSONArray;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.mparticle.kits.ButtonKit.ATTRIBUTE_REFERRER;
@@ -31,6 +38,8 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 public class ButtonKitTests {
@@ -174,6 +183,87 @@ public class ButtonKitTests {
         buttonKit.onKitCreate(settings, context);
         buttonKit.reset();
         verify(merchant).clearAllData(context);
+    }
+
+    @Test
+    public void logEvent_noProductAction_shouldIgnoreCall() {
+        Product product = new Product.Builder("Test", "987", 1).build();
+        CommerceEvent event = new CommerceEvent.Builder(null, product).build();
+        buttonKit.logEvent(event);
+        verifyZeroInteractions(merchant);
+    }
+
+    @Test
+    public void logEvent_shouldConvertToButtonProduct() {
+        ArgumentCaptor<ButtonProductCompatible> productCaptor =
+                ArgumentCaptor.forClass(ButtonProductCompatible.class);
+        Product product = new Product.Builder("Test Name", "98765", 12.34)
+                .category("Test category")
+                .quantity(2)
+                .customAttributes(Collections.singletonMap("test_key", "test_value"))
+                .build();
+        CommerceEvent event = new CommerceEvent.Builder(Product.DETAIL, product).build();
+
+        buttonKit.logEvent(event);
+        verify(merchant).trackProductViewed(productCaptor.capture());
+        ButtonProductCompatible btnProduct = productCaptor.getValue();
+
+        assertThat(btnProduct).isNotNull();
+        assertThat(btnProduct.getId()).isEqualTo("98765");
+        assertThat(btnProduct.getName()).isEqualTo("Test Name");
+        assertThat(btnProduct.getValue()).isEqualTo((int) (12.34 * 100 * 2));
+        assertThat(btnProduct.getQuantity()).isEqualTo(2);
+        assertThat(btnProduct.getCategories()).isNotNull();
+        assertThat(btnProduct.getCategories().size()).isEqualTo(1);
+        assertThat(btnProduct.getCategories().get(0)).isEqualTo("Test category");
+        assertThat(btnProduct.getAttributes()).isNotNull();
+        assertThat(btnProduct.getAttributes()).hasSize(1);
+        assertThat(btnProduct.getAttributes()).containsEntry("btn_product_count", "1");
+        assertThat(btnProduct.getAttributes()).doesNotContainEntry("test_key", "test_value");
+    }
+
+    @Test
+    public void logEvent_detail_shouldTrackWithFirstProduct() {
+        Product product = new Product.Builder("Test", "987", 1).build();
+        CommerceEvent.Builder eventBuilder = new CommerceEvent.Builder(Product.DETAIL, product);
+        for (int i = 0; i < 20; i++) {
+            eventBuilder.addProduct(product);
+        }
+
+        buttonKit.logEvent(eventBuilder.build());
+
+        verify(merchant).trackProductViewed(any(ButtonProductCompatible.class));
+        verifyNoMoreInteractions(merchant);
+    }
+
+    @Test
+    public void logEvent_addToCart_shouldTrackWithFirstProduct() {
+        Product product = new Product.Builder("Test", "987", 1).build();
+        CommerceEvent.Builder eventBuilder = new CommerceEvent.Builder(Product.ADD_TO_CART, product);
+        for (int i = 0; i < 20; i++) {
+            eventBuilder.addProduct(product);
+        }
+
+        buttonKit.logEvent(eventBuilder.build());
+
+        verify(merchant).trackAddToCart(any(ButtonProductCompatible.class));
+        verifyNoMoreInteractions(merchant);
+    }
+
+    @Test
+    public void logEvent_checkoutViewed_shouldTrackWithAllProducts() {
+        ArgumentCaptor<List> listCaptor = ArgumentCaptor.forClass(List.class);
+        Product product = new Product.Builder("Test", "987", 1).build();
+        CommerceEvent.Builder eventBuilder = new CommerceEvent.Builder(Product.CHECKOUT, product);
+        for (int i = 0; i < 20; i++) {
+            eventBuilder.addProduct(product);
+        }
+
+        buttonKit.logEvent(eventBuilder.build());
+
+        verify(merchant).trackCartViewed(listCaptor.capture());
+        assertThat(listCaptor.getValue()).hasSize(21);
+        verifyNoMoreInteractions(merchant);
     }
 
     /*
