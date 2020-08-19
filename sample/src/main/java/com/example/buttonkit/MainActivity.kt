@@ -14,7 +14,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val button = MParticle.getInstance().getKitInstance(
+        val button = MParticle.getInstance()?.getKitInstance(
                 MParticle.ServiceProviders.BUTTON) as ButtonKit?
 
         bt_attribution_refresh.setOnClickListener {
