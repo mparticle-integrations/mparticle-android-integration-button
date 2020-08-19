@@ -4,4 +4,7 @@
     <string name="label_default_token">No attribution token found!</string>
     <string name="label_default_token_intent">No attribution token was found in the deferred link!</string>
     <string name="label_refresh_token">Refresh Token</string>
+    <string name="label_view_product">Track "Product View"</string>
+    <string name="label_add_product">Track "Add To Cart"</string>
+    <string name="label_view_cart">Track "Cart View"</string>
 </resources>
