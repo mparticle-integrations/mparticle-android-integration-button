@@ -11,12 +11,19 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
 import com.usebutton.merchant.ButtonMerchant;
+import com.usebutton.merchant.ButtonProduct;
+import com.usebutton.merchant.ButtonProductCompatible;
 import com.usebutton.merchant.PostInstallIntentListener;
 
 import com.mparticle.AttributionError;
 import com.mparticle.AttributionResult;
+import com.mparticle.commerce.CommerceEvent;
+import com.mparticle.commerce.Product;
 import com.mparticle.internal.Logger;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +33,8 @@ import java.util.Map;
  * Learn more at our <a href="https://developer.usebutton.com/guides/merchants/android/button-merchant-integration-guide">Developer Docs</a>
  */
 public class ButtonKit extends KitIntegration implements KitIntegration.ActivityListener,
-        ButtonMerchant.AttributionTokenListener, PostInstallIntentListener {
+        KitIntegration.CommerceListener, ButtonMerchant.AttributionTokenListener,
+        PostInstallIntentListener {
 
     public static final String ATTRIBUTE_REFERRER = "com.usebutton.source_token";
 
@@ -177,6 +185,47 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
     }
 
     /*
+     * Overrides for CommerceListener
+     */
+
+    @Override
+    public List<ReportingMessage> logLtvIncrease(BigDecimal bigDecimal, BigDecimal bigDecimal1,
+            String s, Map<String, String> map) {
+        return null;
+    }
+
+    @Override
+    public List<ReportingMessage> logEvent(CommerceEvent commerceEvent) {
+        if (commerceEvent == null
+                || commerceEvent.getProductAction() == null
+                || commerceEvent.getProducts() == null) {
+            return null;
+        }
+
+        List<ButtonProductCompatible> products = parseAsButtonProducts(commerceEvent.getProducts());
+        ButtonProductCompatible product = products.isEmpty() ? new ButtonProduct(): products.get(0);
+
+        switch (commerceEvent.getProductAction()) {
+            case Product.DETAIL:
+                logDebug("Tracking product viewed: %s", product.getName());
+                merchant.trackProductViewed(product);
+                break;
+            case Product.ADD_TO_CART:
+                logDebug("Tracking product added to cart: %s", product.getName());
+                merchant.trackAddToCart(product);
+                break;
+            case Product.CHECKOUT:
+                logDebug("Tracking cart viewed with %d products!", products.size());
+                merchant.trackCartViewed(products);
+                break;
+            default:
+                logDebug("Product Action [%s] is not yet supported by the Button Merchant Library",
+                        commerceEvent.getProductAction());
+        }
+        return null;
+    }
+
+    /*
      * Utility methods
      */
 
@@ -190,5 +239,28 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
 
     private void throwOnKitCreateError(String message) {
         throw new IllegalArgumentException(message);
+    }
+
+    private List<ButtonProductCompatible> parseAsButtonProducts(List<Product> products) {
+        List<ButtonProductCompatible> buttonProducts = new ArrayList<>();
+        if (products == null) return buttonProducts;
+
+        for (Product product: products) {
+            buttonProducts.add(parseAsButtonProduct(product, products.size()));
+        }
+        return buttonProducts;
+    }
+
+    private ButtonProductCompatible parseAsButtonProduct(Product product, int collectionSize) {
+        ButtonProduct buttonProduct = new ButtonProduct();
+        if (product == null) return buttonProduct;
+
+        buttonProduct.setName(product.getName());
+        buttonProduct.setId(product.getSku());
+        buttonProduct.setValue((int) (product.getTotalAmount() * 100));
+        buttonProduct.setQuantity((int) product.getQuantity());
+        buttonProduct.setCategories(Collections.singletonList(product.getCategory()));
+        buttonProduct.setAttributes(Collections.singletonMap("btn_product_count", String.valueOf(collectionSize)));
+        return buttonProduct;
     }
 }
