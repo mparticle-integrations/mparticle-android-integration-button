@@ -16,6 +16,8 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
+    def mParticleKey = "{YOUR-MPARTICLE-KEY}"
+    def mParticleSecret = "{YOUR-MPARTICLE-SECRET}"
     compileSdkVersion 28
 
     defaultConfig {

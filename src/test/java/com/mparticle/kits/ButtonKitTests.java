@@ -17,6 +17,7 @@ import com.mparticle.MParticle;
 import com.mparticle.commerce.CommerceEvent;
 import com.mparticle.commerce.Product;
 import com.mparticle.identity.IdentityApi;
+import com.mparticle.identity.MParticleUser;
 import com.mparticle.internal.CoreCallbacks;
 
 import org.json.JSONArray;
@@ -182,6 +183,13 @@ public class ButtonKitTests {
     public void reset_shouldClearAllData() {
         buttonKit.onKitCreate(settings, context);
         buttonKit.reset();
+        verify(merchant).clearAllData(context);
+    }
+
+    @Test
+    public void onLogoutCompleted_shouldClearAllData() {
+        buttonKit.onKitCreate(settings, context);
+        buttonKit.onLogoutCompleted(mock(MParticleUser.class), mock(FilteredIdentityApiRequest.class));
         verify(merchant).clearAllData(context);
     }
 
