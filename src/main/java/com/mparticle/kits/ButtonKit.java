@@ -19,6 +19,7 @@ import com.mparticle.AttributionError;
 import com.mparticle.AttributionResult;
 import com.mparticle.commerce.CommerceEvent;
 import com.mparticle.commerce.Product;
+import com.mparticle.identity.MParticleUser;
 import com.mparticle.internal.Logger;
 
 import java.math.BigDecimal;
@@ -33,8 +34,8 @@ import java.util.Map;
  * Learn more at our <a href="https://developer.usebutton.com/guides/merchants/android/button-merchant-integration-guide">Developer Docs</a>
  */
 public class ButtonKit extends KitIntegration implements KitIntegration.ActivityListener,
-        KitIntegration.CommerceListener, ButtonMerchant.AttributionTokenListener,
-        PostInstallIntentListener {
+        KitIntegration.CommerceListener, KitIntegration.IdentityListener,
+        ButtonMerchant.AttributionTokenListener, PostInstallIntentListener {
 
     public static final String ATTRIBUTE_REFERRER = "com.usebutton.source_token";
 
@@ -224,6 +225,31 @@ public class ButtonKit extends KitIntegration implements KitIntegration.Activity
         }
         return null;
     }
+
+    /*
+     * Overrides for IdentityListener
+     */
+
+    @Override
+    public void onIdentifyCompleted(MParticleUser mParticleUser,
+            FilteredIdentityApiRequest filteredIdentityApiRequest) {}
+
+    @Override
+    public void onLoginCompleted(MParticleUser mParticleUser,
+            FilteredIdentityApiRequest filteredIdentityApiRequest) {}
+
+    @Override
+    public void onLogoutCompleted(MParticleUser mParticleUser,
+            FilteredIdentityApiRequest filteredIdentityApiRequest) {
+        merchant.clearAllData(applicationContext);
+    }
+
+    @Override
+    public void onModifyCompleted(MParticleUser mParticleUser,
+            FilteredIdentityApiRequest filteredIdentityApiRequest) {}
+
+    @Override
+    public void onUserIdentified(MParticleUser mParticleUser) {}
 
     /*
      * Utility methods
