@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Build;
 import androidx.annotation.NonNull;
 
+import com.mparticle.MParticleOptions;
 import com.usebutton.merchant.ButtonProductCompatible;
 
 import com.mparticle.AttributionError;
@@ -346,6 +347,7 @@ public class ButtonKitTests {
         public Map<String, String> getIntegrationAttributes(int i) { return null; }
         public WeakReference<Activity> getCurrentActivity() { return null; }
         public JSONArray getLatestKitConfiguration() { return null; }
+        public MParticleOptions.DataplanOptions getDataplanOptions() { return null; }
         public boolean isPushEnabled() { return false; }
         public String getPushSenderId() { return null; }
         public String getPushInstanceId() { return null; }
