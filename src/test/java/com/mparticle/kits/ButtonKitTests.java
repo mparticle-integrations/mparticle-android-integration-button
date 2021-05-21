@@ -299,7 +299,7 @@ public class ButtonKitTests {
         private AttributionError error;
 
         TestKitManager() {
-            super(context, null, new TestCoreCallbacks(), null);
+            super(context, null, new TestCoreCallbacks(), null, null);
         }
 
         @Override
