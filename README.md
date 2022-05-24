@@ -16,7 +16,7 @@ This repository contains the [Button](https://www.usebutton.com/) integration fo
 
 ### Documentation
 
-[Button integration](http://docs.mparticle.com/?java#button)
+[Button integration](https://docs.mparticle.com/integrations/button/audience/)
 
 ### License
 
