@@ -1,5 +1,6 @@
 
 buildscript {
+    ext.kotlin_version = '1.7.10'
     if (!project.hasProperty('version') || project.version.equals('unspecified')) {
         project.version = '+'
     }
@@ -12,6 +13,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:7.2.2'
         classpath 'com.mparticle:android-kit-plugin:' + project.version
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10'
     }
 }
 
@@ -19,11 +21,12 @@ repositories {
     google()
 }
 
+apply plugin: "kotlin-android"
 apply plugin: 'com.mparticle.kit'
 
 android {
     defaultConfig {
-        minSdkVersion 15
+        minSdkVersion 16
         consumerProguardFiles 'consumer-proguard.pro'
     }
 
@@ -35,6 +38,6 @@ android {
 dependencies {
     implementation 'androidx.annotation:annotation:1.4.0'
     api 'com.usebutton.merchant:button-merchant:1.4.6'
-
     testImplementation 'com.squareup.assertj:assertj-android:1.2.0'
+    testImplementation ("io.mockk:mockk:1.12.4")
 }
