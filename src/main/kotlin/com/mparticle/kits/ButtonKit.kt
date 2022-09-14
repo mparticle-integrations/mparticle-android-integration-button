@@ -147,7 +147,7 @@ class ButtonKit : KitIntegration(), ActivityListener, CommerceListener, Identity
 
     override fun onActivitySaveInstanceState(
         activity: Activity,
-        bundle: Bundle
+        bundle: Bundle?
     ): List<ReportingMessage> = emptyList()
 
     override fun onActivityDestroyed(activity: Activity): List<ReportingMessage> = emptyList()
