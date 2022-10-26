@@ -39,5 +39,5 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.5.0'
     api 'com.usebutton.merchant:button-merchant:1.5.0'
     testImplementation 'com.squareup.assertj:assertj-android:1.2.0'
-    testImplementation ("io.mockk:mockk:1.13.1")
+    testImplementation ("io.mockk:mockk:1.13.2")
 }
