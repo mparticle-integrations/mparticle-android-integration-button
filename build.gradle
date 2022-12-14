@@ -1,6 +1,6 @@
 
 buildscript {
-    ext.kotlin_version = '1.7.10'
+    ext.kotlin_version = '1.7.22'
     if (!project.hasProperty('version') || project.version.equals('unspecified')) {
         project.version = '+'
     }
@@ -17,10 +17,20 @@ buildscript {
     }
 }
 
-repositories {
-    google()
+plugins {
+    id "org.sonarqube" version "3.5.0.2730"
+    id "org.jlleitschuh.gradle.ktlint" version "11.0.0"
 }
 
+sonarqube {
+    properties {
+        property "sonar.projectKey", "mparticle-android-integration-button"
+        property "sonar.organization", "mparticle"
+        property "sonar.host.url", "https://sonarcloud.io"
+    }
+}
+
+apply plugin: 'org.jlleitschuh.gradle.ktlint'
 apply plugin: "kotlin-android"
 apply plugin: 'com.mparticle.kit'
 
