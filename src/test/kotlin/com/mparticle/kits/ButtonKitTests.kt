@@ -11,6 +11,7 @@ import android.os.Build.VERSION
 import com.mparticle.AttributionError
 import com.mparticle.AttributionResult
 import com.mparticle.MParticle
+import com.mparticle.MParticleOptions
 import com.mparticle.MParticleOptions.DataplanOptions
 import com.mparticle.commerce.CommerceEvent
 import com.mparticle.commerce.Product
@@ -74,11 +75,12 @@ class ButtonKitTests {
     @Test
     @Throws(Exception::class)
     fun testClassName() {
-        val factory = KitIntegrationFactory()
-        val integrations = factory.knownIntegrations
+        val options = Mockito.mock(MParticleOptions::class.java)
+        val factory = KitIntegrationFactory(options)
+        val integrations = factory.supportedKits.values
         val className = buttonKit.javaClass.name
         for (integration in integrations) {
-            if (integration.value == className) {
+            if (integration.name == className) {
                 return
             }
         }
@@ -264,7 +266,7 @@ class ButtonKitTests {
 
 
     private inner class TestKitManager internal constructor() :
-        KitManagerImpl(context, null, TestCoreCallbacks(), null) {
+        KitManagerImpl(context, null, TestCoreCallbacks(), mock(MParticleOptions::class.java)) {
         var attributes = HashMap<String, String>()
         var result: AttributionResult? = null
         private var error: AttributionError? = null
