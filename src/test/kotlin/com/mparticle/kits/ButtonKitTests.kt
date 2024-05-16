@@ -27,8 +27,8 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
@@ -348,10 +348,25 @@ class ButtonKitTests {
         @Throws(Exception::class)
         private fun setFinalStatic(field: Field, newValue: Int) {
             field.isAccessible = true
-            val modifiersField = Field::class.java.getDeclaredField("modifiers")
-            modifiersField.isAccessible = true
-            modifiersField.setInt(field, field.modifiers and Modifier.FINAL.inv())
+            val getDeclaredFields0 =
+                Class::class.java.getDeclaredMethod(
+                    "getDeclaredFields0",
+                    Boolean::class.javaPrimitiveType
+                )
+            getDeclaredFields0.isAccessible = true
+            val fields = getDeclaredFields0.invoke(Field::class.java, false) as Array<Field>
+            var modifiersField: Field? = null
+            for (each in fields) {
+                if ("modifiers" == each.name) {
+                    modifiersField = each
+                    break
+                }
+            }
+            modifiersField!!.isAccessible = true
+            modifiersField!!.setInt(field, field.modifiers and Modifier.FINAL.inv())
             field[null] = newValue
+
         }
+
     }
 }
