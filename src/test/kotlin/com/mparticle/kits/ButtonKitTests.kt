@@ -315,17 +315,14 @@ class ButtonKitTests {
         override fun getLaunchAction(): String? = null
         override fun getKitListener(): KitListener {
             return object : KitListener {
-                override fun kitFound(i: Int) {}
-                override fun kitConfigReceived(i: Int, s: String) {}
-                override fun kitExcluded(i: Int, s: String) {}
-                override fun kitStarted(i: Int) {}
-                override fun onKitApiCalled(i: Int, aBoolean: Boolean, vararg objects: Any) {}
-                override fun onKitApiCalled(
-                    s: String,
-                    i: Int,
-                    aBoolean: Boolean,
-                    vararg objects: Any
-                ) {
+                override fun kitFound(kitId: Int) {}
+                override fun kitConfigReceived(kitId: Int, configuration: String?) {}
+                override fun kitExcluded(kitId: Int, reason: String?) {}
+                override fun kitStarted(kitId: Int) {}
+                override fun onKitApiCalled(kitId: Int, used: Boolean?, vararg objects: Any?) {
+                }
+
+                override fun onKitApiCalled(methodName: String?, kitId: Int, used: Boolean?, vararg objects: Any?) {
                 }
             }
         }
