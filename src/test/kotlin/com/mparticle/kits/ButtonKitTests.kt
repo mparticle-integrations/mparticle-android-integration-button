@@ -24,9 +24,7 @@ import io.mockk.Called
 import io.mockk.any
 import io.mockk.capture
 import io.mockk.every
-import io.mockk.exactly
 import io.mockk.mockk
-import io.mockk.relaxed
 import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
