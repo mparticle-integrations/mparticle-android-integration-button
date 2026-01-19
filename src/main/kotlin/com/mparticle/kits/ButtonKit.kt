@@ -12,21 +12,31 @@ import com.mparticle.commerce.CommerceEvent
 import com.mparticle.commerce.Product
 import com.mparticle.identity.MParticleUser
 import com.mparticle.internal.Logger
-import com.mparticle.kits.KitIntegration.*
+import com.mparticle.kits.FilteredIdentityApiRequest
+import com.mparticle.kits.KitIntegration.ActivityListener
+import com.mparticle.kits.KitIntegration.CommerceListener
+import com.mparticle.kits.KitIntegration.IdentityListener
+import com.mparticle.kits.ReportingMessage
 import com.usebutton.merchant.ButtonMerchant.AttributionTokenListener
 import com.usebutton.merchant.ButtonProduct
 import com.usebutton.merchant.ButtonProductCompatible
 import com.usebutton.merchant.PostInstallIntentListener
 import java.math.BigDecimal
-import java.util.*
+import java.util.ArrayList
+import java.util.Collections
 
 /**
  * MParticle embedded implementation of the [Button Merchant Library](https://github.com/button/button-merchant-android).
  *
  * Learn more at our [Developer Docs](https://developer.usebutton.com/guides/merchants/android/button-merchant-integration-guide)
  */
-class ButtonKit : KitIntegration(), ActivityListener, CommerceListener, IdentityListener,
-    AttributionTokenListener, PostInstallIntentListener {
+class ButtonKit :
+    KitIntegration(),
+    ActivityListener,
+    CommerceListener,
+    IdentityListener,
+    AttributionTokenListener,
+    PostInstallIntentListener {
     private var applicationContext: Context? = null
 
     @JvmField
@@ -39,7 +49,7 @@ class ButtonKit : KitIntegration(), ActivityListener, CommerceListener, Identity
 
     public override fun onKitCreate(
         settings: Map<String, String>,
-        ctx: Context
+        ctx: Context,
     ): List<ReportingMessage> {
         applicationContext = ctx.applicationContext
         val applicationId = settings[APPLICATION_ID]
@@ -50,7 +60,6 @@ class ButtonKit : KitIntegration(), ActivityListener, CommerceListener, Identity
             throwOnKitCreateError(LOWER_THAN_API_15)
         }
         applicationContext?.let {
-
             if (applicationId != null) {
                 merchant.configure(it, applicationId)
             }
@@ -69,6 +78,7 @@ class ButtonKit : KitIntegration(), ActivityListener, CommerceListener, Identity
     /*
      * Public methods to expose important Merchant Library methods
      */
+
     /**
      * Get the Button attribution token which should be attached to any orders reported and
      * attributed to the Button network.
@@ -90,7 +100,7 @@ class ButtonKit : KitIntegration(), ActivityListener, CommerceListener, Identity
      * // Use token with your order reporting.
      * }
      * }
-    </pre> *
+     </pre> *
      *
      * @return the last tracked Button attribution token.
      */
@@ -104,20 +114,25 @@ class ButtonKit : KitIntegration(), ActivityListener, CommerceListener, Identity
         logDebug("Refreshed Button Attribution Token: %s", token)
     }
 
-    override fun onResult(intent: Intent?, throwable: Throwable?) {
+    override fun onResult(
+        intent: Intent?,
+        throwable: Throwable?,
+    ) {
         val pm = applicationContext?.packageManager
         if (pm?.let { intent?.resolveActivity(it) } != null) {
             logDebug("Handling post-install intent for %s", intent.toString())
-            val result = AttributionResult()
-                .setLink(intent?.dataString)
-                .setServiceProviderId(configuration.kitId)
+            val result =
+                AttributionResult()
+                    .setLink(intent?.dataString)
+                    .setServiceProviderId(configuration.kitId)
             kitManager.onResult(result)
         }
         if (throwable != null) {
             logError("Error checking post install intent", throwable)
-            val attributionError = AttributionError()
-                .setMessage(throwable.message)
-                .setServiceProviderId(configuration.kitId)
+            val attributionError =
+                AttributionError()
+                    .setMessage(throwable.message)
+                    .setServiceProviderId(configuration.kitId)
             kitManager.onError(attributionError)
         }
     }
@@ -125,7 +140,10 @@ class ButtonKit : KitIntegration(), ActivityListener, CommerceListener, Identity
     /*
      * Overrides for ActivityListener
      */
-    override fun onActivityCreated(activity: Activity, bundle: Bundle?): List<ReportingMessage> {
+    override fun onActivityCreated(
+        activity: Activity,
+        bundle: Bundle?,
+    ): List<ReportingMessage> {
         applicationContext?.let { merchant.trackIncomingIntent(it, activity.intent) }
         return emptyList()
     }
@@ -144,21 +162,21 @@ class ButtonKit : KitIntegration(), ActivityListener, CommerceListener, Identity
 
     override fun onActivityStopped(activity: Activity): List<ReportingMessage> = emptyList()
 
-
     override fun onActivitySaveInstanceState(
         activity: Activity,
-        bundle: Bundle?
+        bundle: Bundle?,
     ): List<ReportingMessage> = emptyList()
 
     override fun onActivityDestroyed(activity: Activity): List<ReportingMessage> = emptyList()
-
 
     /*
      * Overrides for CommerceListener
      */
     override fun logLtvIncrease(
-        bigDecimal: BigDecimal, bigDecimal1: BigDecimal,
-        s: String, map: Map<String, String>
+        bigDecimal: BigDecimal,
+        bigDecimal1: BigDecimal,
+        s: String,
+        map: Map<String, String>,
     ): List<ReportingMessage> = emptyList()
 
     override fun logEvent(commerceEvent: CommerceEvent): List<ReportingMessage> {
@@ -182,10 +200,11 @@ class ButtonKit : KitIntegration(), ActivityListener, CommerceListener, Identity
                     logDebug("Tracking cart viewed with %d products!", products.size)
                     merchant.trackCartViewed(products)
                 }
-                else -> logDebug(
-                    "Product Action [%s] is not yet supported by the Button Merchant Library",
-                    it
-                )
+                else ->
+                    logDebug(
+                        "Product Action [%s] is not yet supported by the Button Merchant Library",
+                        it,
+                    )
             }
         }
         return emptyList()
@@ -196,26 +215,26 @@ class ButtonKit : KitIntegration(), ActivityListener, CommerceListener, Identity
      */
     override fun onIdentifyCompleted(
         mParticleUser: MParticleUser,
-        filteredIdentityApiRequest: FilteredIdentityApiRequest
+        filteredIdentityApiRequest: FilteredIdentityApiRequest,
     ) {
     }
 
     override fun onLoginCompleted(
         mParticleUser: MParticleUser,
-        filteredIdentityApiRequest: FilteredIdentityApiRequest
+        filteredIdentityApiRequest: FilteredIdentityApiRequest,
     ) {
     }
 
     override fun onLogoutCompleted(
         mParticleUser: MParticleUser,
-        filteredIdentityApiRequest: FilteredIdentityApiRequest
+        filteredIdentityApiRequest: FilteredIdentityApiRequest,
     ) {
         merchant.clearAllData(applicationContext!!)
     }
 
     override fun onModifyCompleted(
         mParticleUser: MParticleUser,
-        filteredIdentityApiRequest: FilteredIdentityApiRequest
+        filteredIdentityApiRequest: FilteredIdentityApiRequest,
     ) {
     }
 
@@ -224,17 +243,21 @@ class ButtonKit : KitIntegration(), ActivityListener, CommerceListener, Identity
     /*
      * Utility methods
      */
-    private fun logDebug(message: String, vararg args: Any) {
+    private fun logDebug(
+        message: String,
+        vararg args: Any,
+    ) {
         Logger.debug(String.format("ButtonKit: $message", *args))
     }
 
-    private fun logError(message: String, t: Throwable) {
+    private fun logError(
+        message: String,
+        t: Throwable,
+    ) {
         Logger.error(t, "ButtonKit: $message")
     }
 
-    private fun throwOnKitCreateError(message: String) {
-        throw IllegalArgumentException(message)
-    }
+    private fun throwOnKitCreateError(message: String): Unit = throw IllegalArgumentException(message)
 
     private fun parseAsButtonProducts(products: List<Product>?): List<ButtonProductCompatible> {
         val buttonProducts: MutableList<ButtonProductCompatible> = ArrayList()
@@ -247,7 +270,7 @@ class ButtonKit : KitIntegration(), ActivityListener, CommerceListener, Identity
 
     private fun parseAsButtonProduct(
         product: Product?,
-        collectionSize: Int
+        collectionSize: Int,
     ): ButtonProductCompatible {
         val buttonProduct = ButtonProduct()
         if (product == null) return buttonProduct
@@ -256,10 +279,11 @@ class ButtonKit : KitIntegration(), ActivityListener, CommerceListener, Identity
         buttonProduct.value = (product.totalAmount * 100).toInt()
         buttonProduct.quantity = product.quantity.toInt()
         buttonProduct.categories = listOf(product.category)
-        buttonProduct.attributes = Collections.singletonMap(
-            "btn_product_count",
-            collectionSize.toString()
-        )
+        buttonProduct.attributes =
+            Collections.singletonMap(
+                "btn_product_count",
+                collectionSize.toString(),
+            )
         return buttonProduct
     }
 
