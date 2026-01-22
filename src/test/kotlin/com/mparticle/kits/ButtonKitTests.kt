@@ -20,7 +20,11 @@ import com.mparticle.identity.MParticleUser
 import com.mparticle.internal.CoreCallbacks
 import com.mparticle.internal.CoreCallbacks.KitListener
 import com.usebutton.merchant.ButtonProductCompatible
-import io.mockk.*
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.json.JSONArray
 import org.junit.Assert
@@ -32,8 +36,8 @@ import org.mockito.Mockito.`when`
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
-import java.util.*
-
+import java.util.Collections
+import java.util.HashMap
 
 class ButtonKitTests {
     private val context = mockk<Context>(relaxed = true)
@@ -197,11 +201,13 @@ class ButtonKitTests {
     fun logEvent_shouldConvertToButtonProduct() {
         val productCaptor = slot<ButtonProductCompatible>()
 
-        val product = Product.Builder("Test Name", "98765", 12.34)
-            .category("Test category")
-            .quantity(2.0)
-            .customAttributes(Collections.singletonMap("test_key", "test_value"))
-            .build()
+        val product =
+            Product
+                .Builder("Test Name", "98765", 12.34)
+                .category("Test category")
+                .quantity(2.0)
+                .customAttributes(Collections.singletonMap("test_key", "test_value"))
+                .build()
 
         val event = CommerceEvent.Builder(Product.DETAIL, product).build()
         buttonKit.logEvent(event)
@@ -247,7 +253,6 @@ class ButtonKitTests {
         }
         buttonKit.logEvent(eventBuilder.build())
         verify(exactly = 1) { (merchant).trackAddToCart(any<ButtonProductCompatible>()) }
-
     }
 
     @Test
@@ -258,37 +263,41 @@ class ButtonKitTests {
         for (i in 0..19) {
             eventBuilder.addProduct(product)
         }
-        println(eventBuilder.build().products?.size.toString())
+        println(
+            eventBuilder
+                .build()
+                .products
+                ?.size
+                .toString(),
+        )
         buttonKit.logEvent(eventBuilder.build())
-        verify (exactly = 1){ (merchant).trackCartViewed(capture(listCaptor)) }
+        verify(exactly = 1) { (merchant).trackCartViewed(capture(listCaptor)) }
         assertThat(listCaptor.captured.size).isEqualTo(21)
     }
 
-
     private inner class TestKitManager internal constructor() :
         KitManagerImpl(context, null, TestCoreCallbacks(), mock(MParticleOptions::class.java)) {
-        var attributes = HashMap<String, String>()
-        var result: AttributionResult? = null
-        private var error: AttributionError? = null
-        public override fun getIntegrationAttributes(kitIntegration: KitIntegration): Map<String, String> {
-            return attributes
-        }
+            var attributes = HashMap<String, String>()
+            var result: AttributionResult? = null
+            private var error: AttributionError? = null
 
-        public override fun setIntegrationAttributes(
-            kitIntegration: KitIntegration,
-            integrationAttributes: Map<String, String>
-        ) {
-            attributes = integrationAttributes as HashMap<String, String>
-        }
+            public override fun getIntegrationAttributes(kitIntegration: KitIntegration): Map<String, String> = attributes
 
-        override fun onResult(result: AttributionResult) {
-            this.result = result
-        }
+            public override fun setIntegrationAttributes(
+                kitIntegration: KitIntegration,
+                integrationAttributes: Map<String, String>,
+            ) {
+                attributes = integrationAttributes as HashMap<String, String>
+            }
 
-        override fun onError(error: AttributionError) {
-            this.error = error
+            override fun onResult(result: AttributionResult) {
+                this.result = result
+            }
+
+            override fun onError(error: AttributionError) {
+                this.error = error
+            }
         }
-    }
 
     private inner class TestKitConfiguration : KitConfiguration() {
         override fun getKitId(): Int = TEST_KIT_ID
@@ -296,36 +305,69 @@ class ButtonKitTests {
 
     private inner class TestMParticle : MParticle() {
         override fun Identity(): IdentityApi = mock(IdentityApi::class.java)
-
     }
 
     internal inner class TestCoreCallbacks : CoreCallbacks {
         override fun isBackgrounded(): Boolean = false
+
         override fun getUserBucket(): Int = 0
+
         override fun isEnabled(): Boolean = false
-        override fun setIntegrationAttributes(i: Int, map: Map<String, String>) {}
+
+        override fun setIntegrationAttributes(
+            i: Int,
+            map: Map<String, String>,
+        ) {}
+
         override fun getIntegrationAttributes(i: Int): Map<String, String>? = null
+
         override fun getCurrentActivity(): WeakReference<Activity>? = null
+
         override fun getLatestKitConfiguration(): JSONArray? = null
+
         override fun getDataplanOptions(): DataplanOptions? = null
+
         override fun isPushEnabled(): Boolean = false
+
         override fun getPushSenderId(): String? = null
+
         override fun getPushInstanceId(): String? = null
+
         override fun getLaunchUri(): Uri? = null
+
         override fun getLaunchAction(): String? = null
-        override fun getKitListener(): KitListener {
-            return object : KitListener {
+
+        override fun getKitListener(): KitListener =
+            object : KitListener {
                 override fun kitFound(kitId: Int) {}
-                override fun kitConfigReceived(kitId: Int, configuration: String?) {}
-                override fun kitExcluded(kitId: Int, reason: String?) {}
+
+                override fun kitConfigReceived(
+                    kitId: Int,
+                    configuration: String?,
+                ) {}
+
+                override fun kitExcluded(
+                    kitId: Int,
+                    reason: String?,
+                ) {}
+
                 override fun kitStarted(kitId: Int) {}
-                override fun onKitApiCalled(kitId: Int, used: Boolean?, vararg objects: Any?) {
+
+                override fun onKitApiCalled(
+                    kitId: Int,
+                    used: Boolean?,
+                    vararg objects: Any?,
+                ) {
                 }
 
-                override fun onKitApiCalled(methodName: String?, kitId: Int, used: Boolean?, vararg objects: Any?) {
+                override fun onKitApiCalled(
+                    methodName: String?,
+                    kitId: Int,
+                    used: Boolean?,
+                    vararg objects: Any?,
+                ) {
                 }
             }
-        }
     }
 
     companion object {
@@ -335,20 +377,23 @@ class ButtonKitTests {
         private const val TEST_KIT_ID = 0x01
 
         /*
-     * Test Helpers
-     */
+         * Test Helpers
+         */
         @Throws(Exception::class)
         private fun setTestSdkVersion(sdkVersion: Int) {
             setFinalStatic(VERSION::class.java.getField("SDK_INT"), sdkVersion)
         }
 
         @Throws(Exception::class)
-        private fun setFinalStatic(field: Field, newValue: Int) {
+        private fun setFinalStatic(
+            field: Field,
+            newValue: Int,
+        ) {
             field.isAccessible = true
             val getDeclaredFields0 =
                 Class::class.java.getDeclaredMethod(
                     "getDeclaredFields0",
-                    Boolean::class.javaPrimitiveType
+                    Boolean::class.javaPrimitiveType,
                 )
             getDeclaredFields0.isAccessible = true
             val fields = getDeclaredFields0.invoke(Field::class.java, false) as Array<Field>
@@ -362,8 +407,6 @@ class ButtonKitTests {
             modifiersField!!.isAccessible = true
             modifiersField!!.setInt(field, field.modifiers and Modifier.FINAL.inv())
             field[null] = newValue
-
         }
-
     }
 }
