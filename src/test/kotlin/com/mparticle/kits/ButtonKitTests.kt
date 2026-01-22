@@ -21,8 +21,6 @@ import com.mparticle.internal.CoreCallbacks
 import com.mparticle.internal.CoreCallbacks.KitListener
 import com.usebutton.merchant.ButtonProductCompatible
 import io.mockk.Called
-import io.mockk.any
-import io.mockk.capture
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot

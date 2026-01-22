@@ -59,9 +59,31 @@ android {
     }
 }
 
+repositories {
+    google()
+    mavenCentral()
+}
+
+configurations.all {
+    resolutionStrategy {
+        force "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+        force "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+        force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+        force "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlin_version"
+        // Force Kotlin compiler version to match stdlib
+        eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == 'org.jetbrains.kotlin' && details.requested.name.startsWith('kotlin-')) {
+                details.useVersion kotlin_version
+            }
+        }
+    }
+}
+
 dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.annotation:annotation:1.5.0'
     api 'com.usebutton.merchant:button-merchant:1.5.0'
     testImplementation 'com.squareup.assertj:assertj-android:1.2.0'
-    testImplementation ("io.mockk:mockk:1.13.4")
+    testImplementation "io.mockk:mockk-jvm:1.13.8"
 }
